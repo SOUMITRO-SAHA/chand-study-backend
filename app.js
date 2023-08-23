@@ -1,3 +1,4 @@
+require("dotenv").config();
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -6,16 +7,8 @@ var logger = require("morgan");
 var fs = require("fs");
 const cors = require("cors");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
-var coueseRouter = require("./routes/course");
-var childrenRouter = require("./routes/child");
-var languageRouter = require("./routes/language");
-var chatRouter = require("./routes/chat");
-var productRouter = require("./routes/product");
-var activityRouter = require("./routes/activity");
-var userRouter = require("./routes/user");
-var admin = require("./routes/admin");
+// Routes:
+const authRoutes = require("./routes/auth.routes");
 
 var app = express();
 
@@ -46,17 +39,7 @@ app.use("/uploads", express.static("uploads"));
 //Configuration for Multer
 
 // Routers
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
-app.use("/courses", coueseRouter);
-app.use(childrenRouter);
-app.use(languageRouter);
-app.use(chatRouter);
-app.use(productRouter);
-app.use(activityRouter);
-app.use(userRouter);
-app.use(admin);
-
+app.use("/auth", authRoutes);
 
 app.get("/test", function (req, res) {
 	var locals = {
