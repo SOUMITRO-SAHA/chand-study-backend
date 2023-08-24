@@ -15,13 +15,9 @@ router.delete(
 	authoriseAdmin,
 	courseController.deleteCourseById
 );
-router.get("/all", authoriseAdmin, courseController.getAllCourses);
-router.get("/:courseId", authoriseAdmin, courseController.getCouresByCourseId);
-router.get(
-	"/tests/:courseId",
-	authoriseAdmin,
-	courseController.getAllTestsByCourseId
-);
+router.get("/all", courseController.getAllCourses);
+router.get("/:courseId", courseController.getCouresByCourseId);
+router.get("/tests/:courseId", courseController.getAllTestsByCourseId);
 
 // Export:
 module.exports = router;
