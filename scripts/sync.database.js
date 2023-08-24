@@ -1,5 +1,7 @@
 const sequelize = require("../config/db.config");
 const User = require("../models/user.model");
+const Course = require("../models/course.model");
+const Test = require("../models/test.model");
 
 sequelize
 	.sync()
