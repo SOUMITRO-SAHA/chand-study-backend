@@ -25,7 +25,7 @@ const Course = sequelize.define("Course", {
 		allowNull: false,
 		defaultValue: 0,
 	},
-	image: {
+	images: {
 		type: DataTypes.STRING,
 		allowNull: false,
 		defaultValue: "",
@@ -34,10 +34,14 @@ const Course = sequelize.define("Course", {
 		type: Sequelize.JSON,
 		allowNull: true,
 	},
+	youtubeLink: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		defaultValue: "",
+	},
 });
 
 // Define foreign key relationship
-Course.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
 Course.hasMany(Test, { foreignKey: "courseId", onDelete: "CASCADE" });
 
 module.exports = Course;

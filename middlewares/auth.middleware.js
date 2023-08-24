@@ -60,7 +60,7 @@ exports.authoriseAdmin = async (req, res, next) => {
 	try {
 		const decodedJwtPayload = JWT.verify(token, config.JWT_SECRET);
 
-		req.user = await userModel.findUnique({
+		req.user = await userModel.findOne({
 			where: {
 				id: decodedJwtPayload.id,
 			},
