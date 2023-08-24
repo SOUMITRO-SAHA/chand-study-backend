@@ -47,6 +47,7 @@ exports.signUpWithEmail = async (req, res) => {
 			{
 				id: newUser.id,
 				email: newUser.email,
+				role: newUser.role,
 			},
 			config.JWT_SECRET,
 			{
@@ -99,6 +100,7 @@ exports.loginWithEmail = async (req, res) => {
 			{
 				id: user.id,
 				email: user.email,
+				role: user.role,
 			},
 			config.JWT_SECRET,
 			{
