@@ -47,6 +47,7 @@ exports.signUpWithEmail = async (req, res) => {
 			{
 				id: newUser.id,
 				email: newUser.email,
+				role: newUser.role,
 			},
 			config.JWT_SECRET,
 			{
@@ -54,13 +55,13 @@ exports.signUpWithEmail = async (req, res) => {
 			}
 		);
 
+		newUser.token = token;
 		newUser.password = undefined;
 
-		res.status(201).json({
+		res.status(201).cookie("token", token, AuthOptions).json({
 			success: true,
 			message: "Successfully Signed Up",
 			user: newUser,
-			token: token,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -99,6 +100,7 @@ exports.loginWithEmail = async (req, res) => {
 			{
 				id: user.id,
 				email: user.email,
+				role: user.role,
 			},
 			config.JWT_SECRET,
 			{
@@ -106,13 +108,13 @@ exports.loginWithEmail = async (req, res) => {
 			}
 		);
 
+		user.token = token;
 		user.password = undefined;
 
-		res.status(200).json({
+		res.status(200).cookie("token", token, AuthOptions).json({
 			success: true,
 			message: "Login successful",
-			user: user,
-			token: token,
+			user,
 		});
 	} catch (error) {
 		res.status(500).json({

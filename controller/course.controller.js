@@ -1,433 +1,221 @@
-const { validationResult } = require("express-validator");
-const Course = require("../models/course.model");
+const courseModel = require("../models/course.model");
+const testModel = require("../models/test.model");
+const courseCreateValidator = require("../validator/course.validation");
+const formidable = require("formidable");
+const fs = require("fs");
+const path = require("path");
 
 exports.create = (req, res) => {
-	const errors = validationResult(req);
+	const form = new formidable.IncomingForm();
 
-	// if there is error then return Error
-	if (!errors.isEmpty()) {
-		return res.status(400).json({
-			success: false,
-			errors: errors.array(),
-		});
-	}
-
-	const course = {
-		courseName: req.body.courseName,
-		courseDesc: req.body.courseDesc,
-		instructorOccupation: req.body.instructorOccupation,
-		instructorName: req.body.instructorName,
-		instructorDesc: req.body.instructorDesc,
-		courseDesc: req.body.courseDesc,
-		price: req.body.price,
-		whatYouGet: req.body.whatYouGet,
-	};
-
-	Course.create(course, (err, data) => {
-		if (err)
-			res.status(500).send({
-				message:
-					err.message || "Some error occurred while creating the course.",
+	form.parse(req, async (err, fields, files) => {
+		if (err) {
+			return res.status(500).json({
+				success: false,
+				message: "Error occurred while parsing form data",
+				error: err.message,
 			});
-		else res.send(data);
+		}
+
+		const { courseName, courseDescription, price, whatYouGet, youtubeLink } =
+			fields;
+
+		// Create the course object
+		const courseObj = {
+			courseName: courseName[0],
+			courseDescription: courseDescription[0],
+			price: parseInt(price[0]),
+			whatYouGet: whatYouGet[0].split(","),
+			youtubeLink: youtubeLink[0],
+		};
+
+		// Validate the course object
+		const { error, value: validateCourseObject } =
+			courseCreateValidator.validate(courseObj);
+
+		if (error) {
+			return res.status(400).json({
+				success: false,
+				message: "Validation error",
+				error: error.details[0].message,
+			});
+		}
+
+		if (!files.images) {
+			return res.json({
+				success: false,
+				message: "No photo is selected",
+			});
+		}
+
+		try {
+			// Handle image upload
+			const uploadFolderPath = path.join(__dirname, "../uploads/courses");
+
+			const photo = files.images;
+			const filePath = photo[0].filepath;
+			const data = fs.readFileSync(filePath);
+			const imageExtension = photo[0].mimetype.split("/")[1];
+
+			const imageName = `${courseName}-${Date.now()}.${imageExtension}`;
+			const imagePath = path.join(uploadFolderPath, imageName);
+
+			fs.writeFileSync(imagePath, data);
+
+			courseObj.images = imagePath;
+
+			// Create the course in the database
+			const newCourse = await courseModel.create(courseObj);
+
+			if (!newCourse) {
+				return res.json({
+					success: false,
+					message: "Error creating new course",
+				});
+			}
+
+			res.status(200).json({
+				success: true,
+				message: "Course created successfully",
+				course: newCourse,
+			});
+		} catch (error) {
+			res.status(500).json({
+				success: false,
+				message: "An error occurred while creating a new course",
+				error: error.message,
+			});
+		}
 	});
 };
 
-exports.addCourse = async (req, res) => {	
+exports.updateCourseById = async (req, res) => {
+	const { courseId } = req.params;
+	const updates = req.body;
+	console.log("Hello", courseId, updates);
+
 	try {
-    const course = {
-			courseName: req.body.courseName,
-			courseDesc: req.body.courseDesc,		
-			price: req.body.price,
-			whatYouGet: req.body.whatYouGet,
-			youtubelink: req.body.youtubelink,
-			images: req.file && req.file.filename ? req.file.filename : "",
-		};
-
-		const data = await Course.addCourse(course);
-		res.send(data);
-		
-	} catch (error) {
-		console.log(error);
-		res.status(500).send({
-			message: error.message || "Some error occurred while retrieving Course.",
+		const updateCourse = await courseModel.update(updates, {
+			where: {
+				id: parseInt(courseId),
+			},
 		});
-		
-	}
 
-};
+		if (!updateCourse) {
+			return res.status(404).json({
+				success: false,
+				message: "Couldn't update course, Course Not Found!",
+			});
+		}
 
-
-exports.updateCourse = async (req, res) => {
-	try {		
-        const updatedData = req.body;
-			if(req.file){
-					images= req.file && req.file.filename ? req.file.filename : ""  
-				updated =  {...updatedData, images}
-			}else {
-				delete updatedData['image']; 
-				updated=updatedData
-			}
-			
-	        const CourseData = await  Course.updateCourse(req.params.id,updated);       
-		
-		res.send(CourseData)
-			
+		res.status(200).json({
+			success: true,
+			message: "Course updated successfully",
+		});
 	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while updating the course",
+			error: error.message,
+		});
 	}
 };
 
 exports.deleteCourseById = async (req, res) => {
+	const { courseId } = req.params;
+
 	try {
-		
-		const Coursedata = await  Course.deleteCourseById(req.params.id);       
-		
-		res.send(Coursedata)
-
-	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-
-exports.get = async (req, res) => {
-	try {
-		const data = await Course.getById(req.params.id);
-
-		let newObject = await Promise.all(
-			data.map(async (value) => {
-				const instructorData = await Course.instructorById(value.id);
-				const coursevideo = await Course.coursevideosById(value.id);
-
-				return { course: data[0], instructorData, coursevideo };
-			})
-		);
-
-		res.send(...newObject);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
+		const deletedCourse = await courseModel.destroy({
+			where: {
+				id: parseInt(courseId),
+			},
 		});
-	}
-};
 
-exports.getAll = async (req, res) => {
-	try {
-		const data = await Course.getAllData();
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
-		});
-	}
-};
-
-
-
-
-exports.delete = (req, res) => {
-	Course.deleteById(req.params.id, (err, data) => {
-		if (err) {
-			res.status(500).send({
-				message: "Error retrieving Course with id " + req.params.id,
+		if (!deletedCourse) {
+			return res.json({
+				success: false,
+				message: "Couldn't delete course, Course Not Found!",
 			});
-		} else res.send({ message: "delete sucessfully" });
-	});
-};
+		}
 
-exports.update = (req, res) => {
-	// Validate Request
-	const errors = validationResult(req);
-
-	// if there is error then return Error
-	if (!errors.isEmpty()) {
-		return res.status(400).json({
+		res.status(200).json({
+			success: true,
+			message: "Course deleted successfully",
+			deletedCourse,
+		});
+	} catch (error) {
+		res.status(500).json({
 			success: false,
-			errors: errors.array(),
+			message: "An error occurred while deleting the course",
+			error: error.message,
 		});
 	}
-
-	Course.updateById(req.params.id, req.body, (err, data) => {
-		if (err) {
-			if (err.kind === "not_found") {
-				res.status(404).send({
-					message: `Not found Course with id ${req.params.id}.`,
-				});
-			} else {
-				res.status(500).send({
-					message: "Error updating Course with id " + req.params.id,
-				});
-			}
-		} else res.send(data);
-	});
 };
 
-exports.list = (req, res) => {
-	Course.getAllData((err, data) => {
-		if (err)
-			res.status(500).send({
-				message: err.message || "Some error occurred while retrieving Course.",
+exports.getAllCourses = async (req, res) => {
+	try {
+		const courses = await courseModel.findAll();
+		if (!courses) {
+			return res.json({
+				success: false,
+				message: "Course not found any course on the Database",
 			});
-		else res.send(data);
-	});
-};
+		}
 
-exports.listImage = (req, res) => {
-	Course.getAllData((err, data) => {
-		if (err)
-			res.status(500).send({
-				message: err.message || "Some error occurred while retrieving Course.",
+		res.status(200).json({
+			success: true,
+			message: "Course found successfully",
+			courses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while fetching courses from the Database",
+			error: error.message,
+		});
+	}
+};
+exports.getCouresByCourseId = async (req, res) => {
+	const { courseId } = req.params;
+	try {
+		const course = await courseModel.findByPk(courseId);
+		if (!course) {
+			return res.json({
+				success: false,
+				message: "Course not found",
 			});
-		else res.send(data);
-	});
-};
+		}
 
-
-// Instructor 
-
-exports.addInstructor  = async (req, res) => {	
-	try { 
-
-		const adddata ={
-			course_id: req.body.course_id,
-			name: req.body.name,		
-			description: req.body.description,
-			occupation: req.body.occupation,
-			image: req.file && req.file.filename ? req.file.filename : "",
-	 }
-		const data = await Course.addInstructor(adddata);
-		res.send(data);
-		
-	} catch (error) {
-		console.log(error);
-		res.status(500).send({
-			message: error.message || "Some error occurred while retrieving Course.",
+		res.status(200).json({
+			success: true,
+			message: "Course found successfully",
+			course,
 		});
-		
-	}
-
-};
-
-
-exports.updateInstructor  = async (req, res) => {
-	try {
-		 
-			 const updatedData = req.body;
-			 if(req.file){
-					 image= req.file && req.file.filename ? req.file.filename : ""  
-				 updated =  {...updatedData, image}
-			 }else {
-				 delete updatedData['image']; 
-				 updated=updatedData
-			 }
-
-	        const CourseData = await  Course.updateInstructor(req.params.id,updated);       
-		
-		res.send(CourseData)
-			
 	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-exports.deleteInstructorById = async (req, res) => {
-	try {
-		
-		const Coursedata = await  Course.deleteInstructorById(req.params.id);       
-		
-		res.send(Coursedata)
-
-	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-
-exports.getInstructor  = async (req, res) => {
-	try {
-		const data = await Course.getInstructorById(req.params.id);
-
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong, while fetching courses by course id",
+			error: error.message,
 		});
 	}
 };
-
-exports.getAllInstructor  = async (req, res) => {
+exports.getAllTestsByCourseId = async (req, res) => {
+	const { courseId } = req.params;
 	try {
-		const data = await Course.getAllInstructorData();
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
+		const tests = await testModel.findAll({
+			where: { courseId: parseInt(courseId) },
 		});
-	}
-};
 
-
-// Steps
-
-
-exports.addSteps  = async (req, res) => {	
-	try { 
-        console.log(req.body)
-		const data = await Course.addSteps(req.body);
-		res.send(data);
-		
-	} catch (error) {
-		console.log(error);
-		res.status(500).send({
-			message: error.message || "Some error occurred while retrieving Course.",
+		res.status(200).json({
+			success: true,
+			message: "Tests retrieved successfully",
+			tests: tests,
 		});
-		
-	}
-
-};
-
-
-exports.updateSteps  = async (req, res) => {
-	try {
-	     const CourseData = await  Course.updateSteps(req.params.id,req.body);       
-		
-		res.send(CourseData)
-			
 	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-exports.deleteStepsById = async (req, res) => {
-	try {
-		
-		const Coursedata = await  Course.deleteStepsById(req.params.id);       
-		
-		res.send(Coursedata)
-
-	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-
-exports.getSteps  = async (req, res) => {
-	try {
-		const data = await Course.getStepsById(req.params.id);
-
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
-		});
-	}
-};
-
-exports.getAllSteps  = async (req, res) => {
-	try {
-		const data = await Course.getAllStepsData();
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
-		});
-	}
-};
-
-// materials 
-exports.addMaterials  = async (req, res) => {	
-	try { 
-        console.log(req.body)
-		const data = await Course.addMaterials(req.body);
-		res.send(data);
-		
-	} catch (error) {
-		console.log(error);
-		res.status(500).send({
-			message: error.message || "Some error occurred while retrieving Course.",
-		});
-		
-	}
-
-};
-
-
-exports.updateMaterials  = async (req, res) => {
-	try {
-	     const CourseData = await  Course.updateMaterials(req.params.id,req.body);       
-		
-		res.send(CourseData)
-			
-	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-exports.deleteMaterialsById = async (req, res) => {
-	try {
-		
-		const Coursedata = await  Course.deleteMaterialsById(req.params.id);       
-		
-		res.send(Coursedata)
-
-	} catch (error) {
-		console.log(error);
-		res
-			.status(500)
-			.json({ success: false, message: "Failed to mark activity as complete" });
-	}
-};
-
-
-exports.getMaterials  = async (req, res) => {
-	try {
-		const data = await Course.getMaterialsById(req.params.id);
-
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
-		});
-	}
-};
-
-exports.getAllMaterials  = async (req, res) => {
-	try {
-		const data = await Course.getAllMaterials();
-		res.send(data);
-	} catch (err) {
-		console.log(err);
-		res.status(500).send({
-			message: err.message || "Some error occurred while retrieving Course.",
+		res.status(500).json({
+			success: false,
+			message: "Error retrieving tests",
+			error: error.message,
 		});
 	}
 };
