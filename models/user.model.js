@@ -3,7 +3,7 @@ const sequelize = require("../config/db.config");
 const { AuthRoles } = require("../utils/AuthRoles");
 
 // Create User:
-const User = sequelize.define("User", {
+const User = sequelize.define("user", {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
