@@ -3,11 +3,14 @@ const router = express.Router();
 const authController = require("../controller/auth.controller");
 
 // Authentication:
+// With Email ID:
 router.post("/register", authController.signUpWithEmail);
 router.post("/login", authController.loginWithEmail);
+router.get("/logout", authController.logOut);
 
-// Todo: Pending
-// router.post("/register", authController.signUp);
-// router.post("/login", authController.loginWithPhoneNumber);
+// With Mobile Number:
+router.post("/m/register", authController.signUpWithPhoneNumber);
+router.post("/m/login", authController.logInWithPhoneNumber);
+router.post("/m/verify", authController.verifyPhoneOtp);
 
 module.exports = router;
