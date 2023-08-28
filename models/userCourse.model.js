@@ -4,7 +4,7 @@ const User = require("./user.model");
 const Course = require("./course.model");
 
 // This is many-to-many relationships: Basically an user can have multiple courses and a course can have multiple users.
-const UserCourse = sequelize.define("usercourse", {
+const UserCourse = sequelize.define("usercourses", {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,

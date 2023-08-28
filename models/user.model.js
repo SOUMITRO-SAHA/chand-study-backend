@@ -3,7 +3,7 @@ const sequelize = require("../config/db.config");
 const { AuthRoles } = require("../utils/AuthRoles");
 
 // Create User:
-const User = sequelize.define("user", {
+const User = sequelize.define("users", {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
@@ -34,6 +34,18 @@ const User = sequelize.define("user", {
 		type: DataTypes.STRING,
 		allowNull: false,
 		defaultValue: AuthRoles.STUDENT,
+	},
+	isBlocked: {
+		type: DataTypes.BOOLEAN,
+		default: false,
+	},
+	otp: {
+		type: DataTypes.STRING,
+		default: "",
+	},
+	otpVerified: {
+		type: DataTypes.BOOLEAN,
+		default: false,
 	},
 });
 

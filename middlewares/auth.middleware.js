@@ -21,8 +21,9 @@ exports.isLoggedIn = async (req, res, next) => {
 	}
 	try {
 		const decodedJwtPayload = JWT.verify(token, config.JWT_SECRET);
+
 		// Find the User by Id,
-		req.user = await userModel.findUnique({
+		req.user = await userModel.findOne({
 			where: {
 				id: decodedJwtPayload.id,
 			},
@@ -31,11 +32,14 @@ exports.isLoggedIn = async (req, res, next) => {
 				role: true,
 			},
 		});
+
 		next();
 	} catch (error) {
-		res.status(401).json({
-			success: true,
-			message: "Not authorized to access this route",
+		res.status(500).json({
+			success: false,
+			message:
+				"Something went wrong, while fetching the user in the database. Please try again",
+			error: error.message,
 		});
 	}
 };
