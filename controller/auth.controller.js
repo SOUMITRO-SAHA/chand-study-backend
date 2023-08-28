@@ -39,8 +39,6 @@ const sendOTPByEmail = async (email, otp) => {
 
 		// Send the email
 		const info = await transporter.sendMail(mailOptions);
-		console.log("Message ID", info.messageId);
-
 		console.log("OTP email sent successfully");
 	} catch (error) {
 		console.error("Error sending OTP email:", error);
@@ -220,7 +218,6 @@ exports.logInWithPhoneNumber = async (req, res) => {
 
 		// Email:
 		const message = await sendOTPByEmail(email, otp);
-		console.log(message);
 
 		// Update the User:
 		const userData = await userModel.update(userObject, {
@@ -266,7 +263,6 @@ exports.signUpWithPhoneNumber = async (req, res) => {
 		// 	from: "+17623202467",
 		// });
 		const message = await sendOTPByEmail(email, otp);
-		console.log(message);
 
 		// First check whether the User already exists::
 		const existingUser = await userModel.findOne({

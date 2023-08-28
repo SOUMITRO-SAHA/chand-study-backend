@@ -175,6 +175,7 @@ exports.getAllCourses = async (req, res) => {
 		});
 	}
 };
+
 exports.getCouresByCourseId = async (req, res) => {
 	const { courseId } = req.params;
 	try {
@@ -199,6 +200,7 @@ exports.getCouresByCourseId = async (req, res) => {
 		});
 	}
 };
+
 exports.getAllTestsByCourseId = async (req, res) => {
 	const { courseId } = req.params;
 	try {
