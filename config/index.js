@@ -5,9 +5,9 @@ exports.config = {
 	JWT_EXPIRY: process.env.JWT_EXPIRY || "30d",
 	PORT: process.env.PORT || "4000",
 
-	ETH_USERNAME: process.env.ETH_USERNAME,
-	ETH_USER: process.env.ETH_USER,
-	ETH_PASSWORD: process.env.ETH_PASSWORD,
+	ETH_USERNAME: process.env.ETH_USERNAME || "Juanita Gerlach",
+	ETH_USER: process.env.ETH_USER || "juanita.gerlach21@ethereal.email",
+	ETH_PASSWORD: process.env.ETH_PASSWORD || "6GJre7CMRRTA61auY2",
 
 	// Gmail:
 	GMAIL_USER: process.env.GMAIL_USER,
