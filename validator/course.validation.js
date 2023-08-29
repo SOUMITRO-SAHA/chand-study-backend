@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-const courseCreateValidator = Joi.object({
+exports.courseCreateValidator = Joi.object({
 	courseName: Joi.string().required(),
 	courseDescription: Joi.string().required(),
 	price: Joi.number().integer().min(0).required(),
@@ -8,4 +8,27 @@ const courseCreateValidator = Joi.object({
 	youtubeLink: Joi.string().allow(""),
 });
 
-module.exports = courseCreateValidator;
+exports.sectionCrateValidator = Joi.object({
+	title: Joi.string().required(),
+	marks: Joi.number().positive().required(),
+	negativeMarking: Joi.number().positive().required(),
+	canSkip: Joi.boolean().default(false),
+	minQuestionsToAdvance: Joi.number().integer().positive().allow(null),
+	testId: Joi.number().positive().required(),
+});
+
+exports.questionCreateValidator = Joi.object({
+	content: Joi.string().required(),
+	options: Joi.array().items(Joi.string()).required(),
+	correctAnswer: Joi.string().required(),
+	marks: Joi.number().positive().required(),
+	negativeMarking: Joi.number().positive().required(),
+	sectionId: Joi.number().positive().required(),
+});
+
+exports.testCreateSchema = Joi.object({
+	testName: Joi.string().required(),
+	duration: Joi.number().positive().required(),
+	sections: Joi.array().items(this.sectionCrateValidator).min(1).required(),
+	courseId: Joi.number().positive().required(),
+});

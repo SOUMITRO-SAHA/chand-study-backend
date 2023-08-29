@@ -11,6 +11,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const courseRoutes = require("./routes/course.routes");
 const userRoutes = require("./routes/user.routes");
+const testRoutes = require("./routes/test.routes");
 
 var app = express();
 
@@ -44,6 +45,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes);
 app.use("/course", courseRoutes);
 app.use("/user", userRoutes);
+app.use("/test", testRoutes);
 
 app.get("/test", function (req, res) {
 	var locals = {

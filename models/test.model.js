@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
-const Sequelize = require("../config/db.config");
 const sequelize = require("../config/db.config");
+const Section = require("./section.model");
 
 const Test = sequelize.define("tests", {
 	id: {
@@ -13,7 +13,13 @@ const Test = sequelize.define("tests", {
 		allowNull: false,
 		required: true,
 	},
-	// Update this later:
+	duration: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+	},
 });
+
+// Relationship between Test and Section
+Test.hasMany(Section);
 
 module.exports = Test;
