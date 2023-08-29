@@ -16,6 +16,15 @@ const Section = sequelize.define("sections", {
 		type: DataTypes.FLOAT,
 		allowNull: false,
 	},
+	canSkip: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false,
+	},
+	minQuestionsToAdvance: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
 });
 
 // Relationships between Section, Test and Questions
