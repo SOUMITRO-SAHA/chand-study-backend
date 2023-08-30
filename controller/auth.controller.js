@@ -5,6 +5,8 @@ const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { AuthOptions } = require("../utils/AuthOptions");
+const { sigUpWithPhoneValidator } = require("../validator/user.validation");
+const { sendOTPByEmail } = require("../utils/emailSender");
 const accountSid = config.TW_ACCOUNT_SID;
 const authToken = config.TW_AUTH_TOKEN;
 const client = twilio(accountSid, authToken);
@@ -14,37 +16,7 @@ function generateOTP() {
 	return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
-const sendOTPByEmail = async (email, otp) => {
-	try {
-		// Test Account:
-		let testAccount = await nodemailer.createTestAccount();
-
-		// SMTP
-		const transporter = await nodemailer.createTransport({
-			host: "smtp.ethereal.email",
-			port: 587,
-			auth: {
-				user: config.ETH_USER,
-				pass: config.ETH_PASSWORD,
-			},
-		});
-
-		// Define email options
-		const mailOptions = {
-			from: `${config.ETH_USERNAME} <${config.ETH_USER}>`,
-			to: email,
-			subject: "OTP Verification",
-			text: `Your OTP is ${otp}`,
-		};
-
-		// Send the email
-		const info = await transporter.sendMail(mailOptions);
-		console.log("OTP email sent successfully");
-	} catch (error) {
-		console.error("Error sending OTP email:", error);
-	}
-};
-
+// Auth with Email
 exports.signUpWithEmail = async (req, res) => {
 	const { userName, email, password } = req.body;
 
@@ -176,20 +148,94 @@ exports.logOut = async (req, res) => {
 	}
 };
 
+// Auth with Phone
+exports.signUpWithPhoneNumber = async (req, res) => {
+	try {
+		const { error, value } = sigUpWithPhoneValidator.validate(req.body);
+
+		if (error) {
+			return res.json({
+				success: false,
+				message: error.details[0].message,
+			});
+		}
+
+		let { userName, email, phoneNumber } = value;
+
+		const otp = generateOTP();
+
+		if (phoneNumber.charAt(0) !== "+") {
+			phoneNumber = "+91" + phoneNumber;
+		}
+
+		// const message = await client.messages.create({
+		// 	body: `Your OTP is ${otp}`,
+		// 	to: phoneNumber,
+		// 	from: "+17623202467",
+		// });
+
+		const message = await sendOTPByEmail(email, otp);
+
+		// First check whether the User already exists::
+		const existingUser = await userModel.findOne({
+			where: {
+				phoneNumber,
+				email,
+			},
+		});
+
+		if (existingUser) {
+			return res.json({
+				success: false,
+				message: "User already exists, please login",
+			});
+		}
+
+		console.log(typeof phoneNumber);
+
+		// If not found: then create:
+		const user = await userModel.create({
+			userName,
+			email,
+			phoneNumber,
+			otp,
+		});
+
+		if (!user) {
+			return res.status(500).json({
+				success: false,
+				message:
+					"Unable to create user, something went wrong with Database. Please try again",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "OTP Send Successfully",
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong, while Sign Up with mobile nubmer",
+			error: error.message,
+		});
+	}
+};
+
 exports.logInWithPhoneNumber = async (req, res) => {
 	const { phoneNumber } = req.body;
 	try {
 		const otp = generateOTP();
 
+		// Make Sure to pass the Phone Number with Valid Country Code: For Now Code is for India only
+		if (phoneNumber.charAt(0) !== "+") {
+			phoneNumber = "+91" + phoneNumber;
+		}
+
 		const userObject = {
 			phoneNumber,
 			otp,
 		};
-
-		// Make Sure to pass the Phone Number with Valid Country Code:
-		if (phoneNumber.charAt(0) !== "+") {
-			phoneNumber = "+91" + phoneNumber;
-		}
 
 		// First Find the User by phone number:
 		const user = await userModel.findOne({
@@ -222,70 +268,14 @@ exports.logInWithPhoneNumber = async (req, res) => {
 		// Update the User:
 		const userData = await userModel.update(userObject, {
 			where: {
-				phoneNumber: phoneNumber,
-			},
-		});
-
-		if (userData) {
-			return res.json({
-				success: false,
-				message: "OTP Send Successfully",
-			});
-		} else {
-			return res.status(200).json({
-				success: true,
-				message: "Coundn't send the OTP successfully",
-			});
-		}
-	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: "Some error occurred while login with mobile number",
-			error: error.message,
-		});
-	}
-};
-
-exports.signUpWithPhoneNumber = async (req, res) => {
-	const { userName, phoneNumber, email } = req.body;
-	try {
-		const otp = generateOTP();
-		const userObject = {
-			userName,
-			phoneNumber,
-			email,
-			otp,
-		};
-
-		// const message = await client.messages.create({
-		// 	body: `Your OTP is ${otp}`,
-		// 	to: phoneNumber,
-		// 	from: "+17623202467",
-		// });
-		const message = await sendOTPByEmail(email, otp);
-
-		// First check whether the User already exists::
-		const existingUser = await userModel.findOne({
-			where: {
 				phoneNumber,
-				email,
 			},
 		});
 
-		if (existingUser) {
-			return res.json({
+		if (!userData) {
+			return res.status(500).json({
 				success: false,
-				message: "User already exists, please login",
-			});
-		}
-		// If not found: then create:
-		const user = await userModel.create(userObject);
-
-		if (!user) {
-			return res.json({
-				success: false,
-				message:
-					"Unable to create user, something went wrong with Database. Please try again",
+				message: "Coundn't send the OTP successfully",
 			});
 		}
 
@@ -296,7 +286,7 @@ exports.signUpWithPhoneNumber = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Something went wrong, while Sign Up with Mobile Nubmer",
+			message: "Some error occurred while login with mobile number",
 			error: error.message,
 		});
 	}
