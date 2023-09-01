@@ -169,9 +169,25 @@ exports.verifyEmailOtp = async (req, res) => {
 				}
 			);
 
-			return res
-				.status(200)
-				.json({ success: true, message: "OTP verified", data: userData });
+			// Token:
+			const token = jwt.sign(
+				{
+					id: userData.id,
+					email: userData.email,
+					role: userData.role,
+				},
+				config.JWT_SECRET,
+				{
+					expiresIn: config.JWT_EXPIRY,
+				}
+			);
+
+			return res.cookie("token", token, AuthOptions).status(200).json({
+				success: true,
+				message: "OTP verified",
+				data: userData,
+				token,
+			});
 		}
 
 		res.status(401).json({ success: false, message: "Invalid OTP" });
