@@ -6,6 +6,7 @@ const authController = require("../controller/auth.controller");
 // With Email ID:
 router.post("/register", authController.signUpWithEmail);
 router.post("/login", authController.loginWithEmail);
+router.post("/verify", authController.verifyEmailOtp);
 router.get("/logout", authController.logOut);
 
 // With Mobile Number:

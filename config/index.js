@@ -1,7 +1,8 @@
 require("dotenv").config();
 
 exports.config = {
-	JWT_SECRET: process.env.JWT_SECRET,
+	JWT_SECRET:
+		process.env.JWT_SECRET || "kw2gDQQvDj9ok6FshxwoWzMjxE6Sv4qwvcOJecMixUE=",
 	JWT_EXPIRY: process.env.JWT_EXPIRY || "30d",
 	PORT: process.env.PORT || "4000",
 
