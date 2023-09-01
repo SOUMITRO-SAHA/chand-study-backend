@@ -15,9 +15,16 @@ router.delete(
 	authoriseAdmin,
 	courseController.deleteCourseById
 );
+
+// For All:
 router.get("/all", courseController.getAllCourses);
 router.get("/:courseId", courseController.getCouresByCourseId);
 router.get("/tests/:courseId", courseController.getAllTestsByCourseId);
+
+router.get("/c/popular", courseController.getPopularCourses);
+router.get("/c/free", courseController.getFreeCourses);
+router.get("/c/new", courseController.getRecentlyAddedCourses);
+router.get("/c/featured", courseController.getFeaturedCourses);
 
 // Export:
 module.exports = router;

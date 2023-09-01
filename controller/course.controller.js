@@ -1,10 +1,13 @@
 const courseModel = require("../models/course.model");
 const testModel = require("../models/test.model");
-const courseCreateValidator = require("../validator/course.validation");
+const enrollmentModel = require("../models/enroll.model");
+const { courseCreateValidator } = require("../validator/course.validation");
 const formidable = require("formidable");
 const fs = require("fs");
 const path = require("path");
+const sequelize = require("../config/db.config");
 
+// Only Admin:
 exports.create = (req, res) => {
 	const form = new formidable.IncomingForm();
 
@@ -17,8 +20,14 @@ exports.create = (req, res) => {
 			});
 		}
 
-		const { courseName, courseDescription, price, whatYouGet, youtubeLink } =
-			fields;
+		const {
+			courseName,
+			courseDescription,
+			price,
+			whatYouGet,
+			youtubeLink,
+			language,
+		} = fields;
 
 		// Create the course object
 		const courseObj = {
@@ -27,6 +36,7 @@ exports.create = (req, res) => {
 			price: parseInt(price[0]),
 			whatYouGet: whatYouGet[0].split(","),
 			youtubeLink: youtubeLink[0],
+			language: language[0],
 		};
 
 		// Validate the course object
@@ -152,6 +162,7 @@ exports.deleteCourseById = async (req, res) => {
 	}
 };
 
+// Any one:
 exports.getAllCourses = async (req, res) => {
 	try {
 		const courses = await courseModel.findAll();
@@ -222,7 +233,96 @@ exports.getAllTestsByCourseId = async (req, res) => {
 	}
 };
 
-exports.getPopularCourses = async (req, res) => {};
-exports.getRecentlyAddedCourses = async (req, res) => {};
-exports.getFeaturedCourses = async (req, res) => {};
-exports.getFreeCourses = async (req, res) => {};
+exports.getPopularCourses = async (req, res) => {
+	try {
+		const popularCourses = await enrollmentModel.findAll({
+			attributes: [
+				"courseId",
+				[sequelize.fn("COUNT", sequelize.col("userId")), "userCount"],
+			],
+			group: ["courseId"],
+			order: [["userCount", "DESC"]],
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully fetched popular courses",
+			courses: popularCourses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching popular courses",
+			error: error.message,
+		});
+	}
+};
+
+exports.getRecentlyAddedCourses = async (req, res) => {
+	try {
+		const courses = await courseModel.findAll({
+			order: [["createdAt", "DESC"]],
+			limit: 10,
+		});
+
+		if (!courses) {
+			return res.json({
+				success: false,
+				message: "couldn't found any recently addes courses on the Database",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Course found successfully",
+			courses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while fetching courses from the Database",
+			error: error.message,
+		});
+	}
+};
+
+exports.getFeaturedCourses = async (req, res) => {
+	try {
+		const featuredCourses = await courseModel.findAll({
+			where: { isFeatured: true },
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully fetched featured courses",
+			courses: featuredCourses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching featured courses",
+			error: error.message,
+		});
+	}
+};
+
+exports.getFreeCourses = async (req, res) => {
+	try {
+		const freeCourses = await courseModel.findAll({
+			where: { price: 0 },
+			order: [["createdAt", "DESC"]],
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully fetched all free courses",
+			courses: freeCourses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching free courses",
+			error: error.message,
+		});
+	}
+};
