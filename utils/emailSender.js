@@ -1,17 +1,20 @@
 const nodemailer = require("nodemailer");
 const { config } = require("../config");
 
+// SMTP:
 const transporter = nodemailer.createTransport({
-	service: "gmail",
+	host: "smtp.gmail.com",
+	port: 465,
+	secure: true,
 	auth: {
-		user: config.GMAIL_USER,
-		pass: config.GMAIL_PASSWORD,
+		user: "krishnashivila@gmail.com",
+		pass: "shtrzhwdzlpczbbd",
 	},
 });
 
 const sendOTPByEmail = async (email, otp) => {
 	const mailOptions = {
-		from: config.GMAIL_USER,
+		from: "krishnashivila@gmail.com",
 		to: email,
 		subject: "OTP for Registration",
 		html: `

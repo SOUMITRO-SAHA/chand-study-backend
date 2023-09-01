@@ -6,7 +6,7 @@ const UserCourse = require("../models/userCourse.model");
 const Enroll = require("../models/enroll.model");
 
 sequelize
-	.sync({ force: true })
+	.sync({ alter: true })
 	.then(() => {
 		console.log("Models synchronized with the database.");
 		process.exit(0); // Exit the script successfully
