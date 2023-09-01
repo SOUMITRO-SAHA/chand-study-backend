@@ -39,12 +39,17 @@ exports.signUpWithEmail = async (req, res) => {
 			phoneNumber = "+91" + phoneNumber;
 		}
 
+		// const message = await client.messages.create({
+		// 	body: `Your OTP is ${otp}`,
+		// 	to: phoneNumber,
+		// 	from: "+17623202467",
+		// });
+
 		const message = await sendOTPByEmail(email, otp);
 
 		// First check whether the User already exists::
 		const existingUser = await userModel.findOne({
 			where: {
-				phoneNumber,
 				email,
 			},
 		});
@@ -81,7 +86,7 @@ exports.signUpWithEmail = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Something went wrong, while Sign Up with mobile nubmer",
+			message: "Something went wrong, while Sign Up",
 			error: error.message,
 		});
 	}
@@ -195,6 +200,123 @@ exports.verifyEmailOtp = async (req, res) => {
 		res.status(500).send({
 			message: "Some error occurred while processing the request.",
 			error: err.message,
+		});
+	}
+};
+
+// Admin Panel
+exports.signUp = async (req, res) => {
+	const { userName, email, password } = req.body;
+
+	try {
+		console.log(userName, email, password);
+
+		const existingUser = await userModel.findOne({
+			where: { email: email },
+		});
+
+		if (existingUser) {
+			return res.status(409).json({
+				success: false,
+				message: "User already exists, please login",
+			});
+		}
+
+		const encryptedPassword = await bcrypt.hash(password, 10);
+
+		const newUser = await userModel.create({
+			userName: userName,
+			email: email,
+			password: encryptedPassword,
+		});
+
+		if (!newUser) {
+			return res.status(500).json({
+				success: false,
+				message: "Error creating user",
+			});
+		}
+
+		const token = jwt.sign(
+			{
+				id: newUser.id,
+				email: newUser.email,
+				role: newUser.role,
+			},
+			config.JWT_SECRET,
+			{
+				expiresIn: config.JWT_EXPIRY,
+			}
+		);
+
+		// Making the password undefined:
+		newUser.password = undefined;
+
+		res.status(201).cookie("token", token, AuthOptions).json({
+			success: true,
+			message: "Successfully Signed Up",
+			user: newUser,
+			token,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error during sign-up",
+			error: error.message,
+		});
+	}
+};
+
+exports.logIn = async (req, res) => {
+	const { email, password } = req.body;
+
+	try {
+		const user = await userModel.findOne({
+			where: { email: email },
+		});
+
+		if (!user) {
+			return res.status(401).json({
+				success: false,
+				message: "Invalid credentials",
+			});
+		}
+
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+
+		if (!isPasswordValid) {
+			return res.status(401).json({
+				success: false,
+				message: "Invalid credentials",
+			});
+		}
+
+		const token = jwt.sign(
+			{
+				id: user.id,
+				email: user.email,
+				role: user.role,
+			},
+			config.JWT_SECRET,
+			{
+				expiresIn: config.JWT_EXPIRY,
+			}
+		);
+
+		// Making the Password undefine:
+		user.password = undefined;
+
+		res.status(200).cookie("token", token, AuthOptions).json({
+			success: true,
+			message: "Login successful",
+			user,
+			token,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Error during login",
+			error: error.message,
 		});
 	}
 };

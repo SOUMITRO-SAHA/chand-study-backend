@@ -235,6 +235,7 @@ exports.getAllTestsByCourseId = async (req, res) => {
 
 exports.getPopularCourses = async (req, res) => {
 	try {
+		const popularCoursesArray = [];
 		const popularCourses = await enrollmentModel.findAll({
 			attributes: [
 				"courseId",
@@ -244,10 +245,26 @@ exports.getPopularCourses = async (req, res) => {
 			order: [["userCount", "DESC"]],
 		});
 
+		const courseDetailPromises = popularCourses.map(async ({ courseId }) => {
+			const courseDetails = await courseModel.findAll({
+				where: {
+					id: courseId,
+				},
+			});
+
+			return courseDetails;
+		});
+
+		const resolvedCourseDetails = await Promise.all(courseDetailPromises);
+
+		resolvedCourseDetails.forEach((courseDetail) => {
+			popularCoursesArray.push(...courseDetail);
+		});
+
 		res.status(200).json({
 			success: true,
 			message: "Successfully fetched popular courses",
-			courses: popularCourses,
+			courses: [...popularCoursesArray],
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -322,6 +339,90 @@ exports.getFreeCourses = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "Something went wrong while fetching free courses",
+			error: error.message,
+		});
+	}
+};
+
+exports.categoryFilter = async (req, res) => {
+	try {
+		const { categoryId } = req.body;
+
+		if (!categoryId) {
+			return res.status(400).json({
+				success: false,
+				message: "CategoryId is required in the request body.",
+			});
+		}
+
+		const courses = await courseModel.findAll({
+			where: { categoryId },
+		});
+
+		if (!courses) {
+			return res.status(404).json({
+				success: false,
+				message: "No courses found for the specified category.",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Courses filtered by category successfully.",
+			courses,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while filtering courses by category.",
+			error: error.message,
+		});
+	}
+};
+
+exports.banner = async (req, res) => {
+	try {
+		const result = {};
+		const popularCoursesArray = [];
+		// Fetch popular courses with user count
+		const popularCourses = await enrollmentModel.findAll({
+			attributes: [
+				"courseId",
+				[sequelize.fn("COUNT", sequelize.col("userId")), "userCount"],
+			],
+			group: ["courseId"],
+			order: [["userCount", "DESC"]],
+		});
+
+		const courseIds = popularCourses.map(async (course) => {
+			const courseDetails = await courseModel.findAll({
+				where: {
+					id: course.courseId,
+				},
+			});
+
+			// Pushing the Result in to an array:
+			popularCoursesArray.push(...courseDetails);
+		});
+
+		// Fetch featured courses
+		const featuredCourses = await courseModel.findAll({
+			where: { isFeatured: true },
+			limit: 2,
+		});
+
+		// Mergins the Results;
+		result.featuredCourses = featuredCourses;
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully fetched featured courses",
+			data: [...popularCoursesArray, ...result.featuredCourses], // Changed 'courses' to 'data' for consistency
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching featured courses",
 			error: error.message,
 		});
 	}
