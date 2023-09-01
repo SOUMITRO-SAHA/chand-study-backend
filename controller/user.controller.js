@@ -1,6 +1,7 @@
 const userModel = require("../models/user.model");
 const courseModel = require("../models/course.model");
-const UserCourse = require("../models/userCourse.model");
+const enrollModel = require("../models/enroll.model");
+const { number } = require("joi");
 
 // Get All the Users:
 exports.getAllUsers = async (req, res) => {
@@ -184,14 +185,21 @@ exports.unBlockUserById = async (req, res) => {
 
 // Enrolling the User into the Course:
 exports.enrollInCourse = async (req, res) => {
-	const { courseId } = req.params;
-	const userId = req.user.id;
+	let { courseId } = req.params;
+	let userId = req.user.id;
 
 	try {
-		const isEnrolled = await UserCourse.findOne({
+		if (typeof userId !== number) {
+			userId = Number(userId);
+		}
+		if (typeof courseId !== number) {
+			courseId = Number(courseId);
+		}
+
+		const isEnrolled = await enrollModel.findOne({
 			where: {
-				UserId: userId,
-				CourseId: parseInt(courseId),
+				userId,
+				courseId,
 			},
 		});
 
@@ -202,9 +210,9 @@ exports.enrollInCourse = async (req, res) => {
 			});
 		}
 
-		const enrolledUser = await UserCourse.create({
-			UserId: userId,
-			CourseId: parseInt(courseId),
+		const enrolledUser = await enrollModel.create({
+			userId,
+			courseId,
 		});
 
 		if (!enrolledUser) {
@@ -235,7 +243,7 @@ exports.getCoursesEnrolledByUser = async (req, res) => {
 		console.log("Getting the courses by User Id");
 		console.log("UID:", userId);
 
-		const enrolledCourses = await UserCourse.findAll({
+		const enrolledCourses = await enrollModel.findAll({
 			where: {
 				UserId: userId,
 			},

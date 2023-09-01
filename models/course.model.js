@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const Sequelize = require("sequelize");
 const sequelize = require("../config/db.config");
 const Test = require("./test.model");
+const { Languages } = require("../utils/Languages");
 
 const Course = sequelize.define("courses", {
 	id: {
@@ -37,6 +38,11 @@ const Course = sequelize.define("courses", {
 		type: DataTypes.STRING,
 		allowNull: false,
 		defaultValue: "",
+	},
+	language: {
+		type: DataTypes.ENUM(Object.values(Languages)),
+		allowNull: false,
+		defaultValue: Languages.HINDI,
 	},
 });
 

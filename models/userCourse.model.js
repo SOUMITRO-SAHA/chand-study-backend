@@ -10,14 +10,6 @@ const UserCourse = sequelize.define("usercourses", {
 		primaryKey: true,
 		autoIncrement: true,
 	},
-	UserId: {
-		type: DataTypes.INTEGER,
-		allowNull: false,
-	},
-	CourseId: {
-		type: DataTypes.INTEGER,
-		allowNull: false,
-	},
 });
 
 User.belongsToMany(Course, { through: UserCourse });

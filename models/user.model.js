@@ -28,7 +28,6 @@ const User = sequelize.define("users", {
 	phoneNumber: {
 		type: DataTypes.STRING,
 		allowNull: true,
-		unique: true,
 	},
 	role: {
 		type: DataTypes.STRING,
@@ -37,15 +36,15 @@ const User = sequelize.define("users", {
 	},
 	isBlocked: {
 		type: DataTypes.BOOLEAN,
-		default: false,
+		defaultValue: false,
 	},
 	otp: {
 		type: DataTypes.STRING,
-		default: "",
+		defaultValue: "",
 	},
 	otpVerified: {
 		type: DataTypes.BOOLEAN,
-		default: false,
+		defaultValue: false,
 	},
 });
 
