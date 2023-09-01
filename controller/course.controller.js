@@ -221,3 +221,8 @@ exports.getAllTestsByCourseId = async (req, res) => {
 		});
 	}
 };
+
+exports.getPopularCourses = async (req, res) => {};
+exports.getRecentlyAddedCourses = async (req, res) => {};
+exports.getFeaturedCourses = async (req, res) => {};
+exports.getFreeCourses = async (req, res) => {};

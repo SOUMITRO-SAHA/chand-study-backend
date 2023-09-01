@@ -5,7 +5,10 @@ const userModel = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { AuthOptions } = require("../utils/AuthOptions");
-const { sigUpWithPhoneValidator } = require("../validator/user.validation");
+const {
+	sigUpWithPhoneValidator,
+	verifyEmailValidator,
+} = require("../validator/user.validation");
 const { sendOTPByEmail } = require("../utils/emailSender");
 const accountSid = config.TW_ACCOUNT_SID;
 const authToken = config.TW_AUTH_TOKEN;
@@ -18,115 +21,164 @@ function generateOTP() {
 
 // Auth with Email
 exports.signUpWithEmail = async (req, res) => {
-	const { userName, email, password } = req.body;
-
 	try {
+		const { error, value } = sigUpWithPhoneValidator.validate(req.body);
+
+		if (error) {
+			return res.json({
+				success: false,
+				message: error.details[0].message,
+			});
+		}
+
+		let { userName, email, phoneNumber } = value;
+
+		const otp = generateOTP();
+
+		if (phoneNumber.charAt(0) !== "+") {
+			phoneNumber = "+91" + phoneNumber;
+		}
+
+		const message = await sendOTPByEmail(email, otp);
+
+		// First check whether the User already exists::
 		const existingUser = await userModel.findOne({
-			where: { email: email },
+			where: {
+				phoneNumber,
+				email,
+			},
 		});
 
 		if (existingUser) {
-			return res.status(409).json({
+			return res.json({
 				success: false,
 				message: "User already exists, please login",
 			});
 		}
 
-		const encryptedPassword = await bcrypt.hash(password, 10);
+		console.log(typeof phoneNumber);
 
-		const newUser = await userModel.create({
-			userName: userName,
-			email: email,
-			password: encryptedPassword,
+		// If not found: then create:
+		const user = await userModel.create({
+			userName,
+			email,
+			phoneNumber,
+			otp,
 		});
 
-		if (!newUser) {
+		if (!user) {
 			return res.status(500).json({
 				success: false,
-				message: "Error creating user",
+				message:
+					"Unable to create user, something went wrong with Database. Please try again",
 			});
 		}
 
-		const token = jwt.sign(
-			{
-				id: newUser.id,
-				email: newUser.email,
-				role: newUser.role,
-			},
-			config.JWT_SECRET,
-			{
-				expiresIn: config.JWT_EXPIRY,
-			}
-		);
-
-		// Making the password undefined:
-		newUser.password = undefined;
-
-		res.status(201).cookie("token", token, AuthOptions).json({
+		res.status(200).json({
 			success: true,
-			message: "Successfully Signed Up",
-			user: newUser,
-			token,
+			message: "OTP Send Successfully",
 		});
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Error during sign-up",
+			message: "Something went wrong, while Sign Up with mobile nubmer",
 			error: error.message,
 		});
 	}
 };
 
 exports.loginWithEmail = async (req, res) => {
-	const { email, password } = req.body;
+	const { email } = req.body;
 
 	try {
+		const otp = generateOTP();
+
 		const user = await userModel.findOne({
-			where: { email: email },
+			where: { email },
 		});
 
 		if (!user) {
 			return res.status(401).json({
 				success: false,
-				message: "Invalid credentials",
+				message: "User not found, please sign up",
 			});
 		}
 
-		const isPasswordValid = await bcrypt.compare(password, user.password);
+		// Email:
+		const message = await sendOTPByEmail(email, otp);
 
-		if (!isPasswordValid) {
-			return res.status(401).json({
-				success: false,
-				message: "Invalid credentials",
-			});
-		}
-
-		const token = jwt.sign(
+		// Update the User:
+		const userData = await userModel.update(
 			{
-				id: user.id,
-				email: user.email,
-				role: user.role,
+				otp,
 			},
-			config.JWT_SECRET,
 			{
-				expiresIn: config.JWT_EXPIRY,
+				where: {
+					email,
+				},
 			}
 		);
 
-		// Making the Password undefine:
-		user.password = undefined;
+		if (!userData) {
+			return res.status(500).json({
+				success: false,
+				message: "Coundn't send the OTP successfully",
+			});
+		}
 
-		res.status(200).cookie("token", token, AuthOptions).json({
+		res.status(200).json({
 			success: true,
-			message: "Login successful",
-			user,
-			token,
+			message: "OTP Send Successfully",
 		});
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Error during login",
+			message: "Some error occurred while login with mobile number",
 			error: error.message,
+		});
+	}
+};
+
+exports.verifyEmailOtp = async (req, res) => {
+	try {
+		const { error, value } = verifyEmailValidator.validate(req.body);
+
+		if (error) {
+			return res.json({
+				success: false,
+				message: error.details[0].message,
+			});
+		}
+
+		const { otp, email } = value;
+
+		const userData = await userModel.findOne({
+			where: {
+				email,
+			},
+		});
+
+		if (userData.otp == otp) {
+			// Now Update the Varification Status:
+			const updatedUser = await userModel.update(
+				{ otpVerified: true },
+				{
+					where: {
+						email,
+					},
+				}
+			);
+
+			return res
+				.status(200)
+				.json({ success: true, message: "OTP verified", data: userData });
+		}
+
+		res.status(401).json({ success: false, message: "Invalid OTP" });
+	} catch (err) {
+		res.status(500).send({
+			message: "Some error occurred while processing the request.",
+			error: err.message,
 		});
 	}
 };
