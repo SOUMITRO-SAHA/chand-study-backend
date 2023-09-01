@@ -247,7 +247,6 @@ exports.signUpWithPhoneNumber = async (req, res) => {
 		// First check whether the User already exists::
 		const existingUser = await userModel.findOne({
 			where: {
-				phoneNumber,
 				email,
 			},
 		});
@@ -284,7 +283,7 @@ exports.signUpWithPhoneNumber = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Something went wrong, while Sign Up with mobile nubmer",
+			message: "Something went wrong, while Sign Up",
 			error: error.message,
 		});
 	}

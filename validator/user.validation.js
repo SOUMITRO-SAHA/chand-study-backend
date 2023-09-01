@@ -2,8 +2,8 @@ const Joi = require("joi");
 
 exports.sigUpWithPhoneValidator = Joi.object({
 	userName: Joi.string().required(),
-	phoneNumber: Joi.string().min(10).max(10).required(),
 	email: Joi.string().required(),
+	phoneNumber: Joi.string().min(10).max(10).required(),
 });
 
 exports.loginWithEmailValidator = Joi.object({
