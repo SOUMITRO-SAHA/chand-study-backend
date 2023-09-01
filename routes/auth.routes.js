@@ -3,6 +3,10 @@ const router = express.Router();
 const authController = require("../controller/auth.controller");
 
 // Authentication:
+// Admin Panel
+router.post("/admin/login", authController.logIn);
+router.post("/admin/signup", authController.signUp);
+
 // With Email ID:
 router.post("/register", authController.signUpWithEmail);
 router.post("/login", authController.loginWithEmail);

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const courseController = require("../controller/course.controller");
+const categoryController = require("../controller/category.controller");
 const { authoriseAdmin } = require("../middlewares/auth.middleware");
 
 // Routes:
@@ -15,6 +16,14 @@ router.delete(
 	authoriseAdmin,
 	courseController.deleteCourseById
 );
+// Category Controller
+router.post("/cat/add", authoriseAdmin, categoryController.createNewCategory);
+router.patch(
+	"/cat/update/:categoryId",
+	authoriseAdmin,
+	categoryController.updateCategory
+);
+router.delete("/cat/delete", authoriseAdmin, categoryController.deleteCategory);
 
 // For All:
 router.get("/all", courseController.getAllCourses);
@@ -25,6 +34,10 @@ router.get("/c/popular", courseController.getPopularCourses);
 router.get("/c/free", courseController.getFreeCourses);
 router.get("/c/new", courseController.getRecentlyAddedCourses);
 router.get("/c/featured", courseController.getFeaturedCourses);
+
+// Extra:
+router.get("/c/banner", courseController.banner);
+router.post("/c/category", courseController.categoryFilter);
 
 // Export:
 module.exports = router;
