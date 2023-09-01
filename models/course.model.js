@@ -44,6 +44,16 @@ const Course = sequelize.define("courses", {
 		allowNull: false,
 		defaultValue: Languages.HINDI,
 	},
+	category: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		defaultValue: "ALL",
+	},
+	isFeatured: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false,
+	},
 });
 
 // Define foreign key relationship

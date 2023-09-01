@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { Languages } = require("../utils/Languages");
 
 exports.courseCreateValidator = Joi.object({
 	courseName: Joi.string().required(),
@@ -6,6 +7,9 @@ exports.courseCreateValidator = Joi.object({
 	price: Joi.number().integer().min(0).required(),
 	whatYouGet: Joi.array().items(Joi.string()),
 	youtubeLink: Joi.string().allow(""),
+	language: Joi.string()
+		.valid(...Object.values(Languages))
+		.default(Languages.HINDI),
 });
 
 exports.sectionCrateValidator = Joi.object({
