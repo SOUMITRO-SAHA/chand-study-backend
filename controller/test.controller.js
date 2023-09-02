@@ -51,40 +51,71 @@ exports.getAllTestsByUserId = async (req, res) => {
 	}
 };
 
+// exports.createTest = async (req, res) => {
+// 	try {
+// 		const { error } = testCreateSchema.validate(req.body);
+
+// 		if (error) {
+// 			return res.json({ success: false, error: error.message });
+// 		}
+
+// 		const { testName, duration, sections, courseId } = req.body;
+
+// 		const newTest = await testModel.create({
+// 			testName,
+// 			duration,
+// 			courseId,
+// 		});
+
+// 		// Create sections for the test
+// 		for (const section of sections) {
+// 			const {
+// 				title,
+// 				marks,
+// 				negativeMarking,
+// 				allowedToSkip,
+// 				minQuestionsToAdvance,
+// 			} = section;
+
+// 			await sectionModel.create({
+// 				title,
+// 				marks,
+// 				negativeMarking,
+// 				allowedToSkip,
+// 				minQuestionsToAdvance,
+// 				testId: newTest.id, // Associate the section with the newly created test
+// 			});
+// 		}
+
+// 		res.status(200).json({
+// 			success: true,
+// 			message: "Test created successfully",
+// 			test: newTest,
+// 		});
+// 	} catch (error) {
+// 		res.status(500).json({
+// 			success: false,
+// 			message: "An error occurred while creating the test.",
+// 			error: error.message,
+// 		});
+// 	}
+// };
+
 exports.createTest = async (req, res) => {
 	try {
-		const { error } = testCreateSchema.validate(req.body);
+		const { error, value } = testCreateSchema.validate(req.body);
 
 		if (error) {
 			return res.json({ success: false, error: error.message });
 		}
 
-		const { testName, duration, sections, courseId } = req.body;
+		const { testName, duration, courseId } = value;
 
 		const newTest = await testModel.create({
 			testName,
 			duration,
 			courseId,
 		});
-
-		// Create sections for the test
-		for (const section of sections) {
-			const {
-				title,
-				marks,
-				negativeMarking,
-				allowedToSkip,
-				minQuestionsToAdvance,
-			} = section;
-			await sectionModel.create({
-				title,
-				marks,
-				negativeMarking,
-				allowedToSkip,
-				minQuestionsToAdvance,
-				TestId: newTest.id, // Associate the section with the newly created test
-			});
-		}
 
 		res.status(200).json({
 			success: true,
