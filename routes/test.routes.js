@@ -8,6 +8,11 @@ const {
 
 // Admin Access:
 router.post("/admin/new/add", authoriseAdmin, testController.createTest);
+router.post(
+	"/admin/update/:testId",
+	authoriseAdmin,
+	testController.updateTestByTestId
+);
 router.post("/new/section", authoriseAdmin, testController.createSection);
 router.post("/new/question", authoriseAdmin, testController.createQuestion);
 router.get(
@@ -34,6 +39,12 @@ router.get(
 	"/:courseId/:testId",
 	isLoggedIn,
 	testController.getSectionsByCourseTest
+);
+
+router.get(
+	"/u/instructions/:testId",
+	isLoggedIn,
+	testController.getTestInstructionsByTestId
 );
 
 module.exports = router;

@@ -9,6 +9,7 @@ const {
 	questionCreateValidator,
 	testCreateSchema,
 } = require("../validator/course.validation");
+const { testUpdateValidator } = require("../validator/test.validation");
 
 // Test Controllers:
 // Todo: Pending
@@ -51,56 +52,6 @@ exports.getAllTestsByUserId = async (req, res) => {
 	}
 };
 
-// exports.createTest = async (req, res) => {
-// 	try {
-// 		const { error } = testCreateSchema.validate(req.body);
-
-// 		if (error) {
-// 			return res.json({ success: false, error: error.message });
-// 		}
-
-// 		const { testName, duration, sections, courseId } = req.body;
-
-// 		const newTest = await testModel.create({
-// 			testName,
-// 			duration,
-// 			courseId,
-// 		});
-
-// 		// Create sections for the test
-// 		for (const section of sections) {
-// 			const {
-// 				title,
-// 				marks,
-// 				negativeMarking,
-// 				allowedToSkip,
-// 				minQuestionsToAdvance,
-// 			} = section;
-
-// 			await sectionModel.create({
-// 				title,
-// 				marks,
-// 				negativeMarking,
-// 				allowedToSkip,
-// 				minQuestionsToAdvance,
-// 				testId: newTest.id, // Associate the section with the newly created test
-// 			});
-// 		}
-
-// 		res.status(200).json({
-// 			success: true,
-// 			message: "Test created successfully",
-// 			test: newTest,
-// 		});
-// 	} catch (error) {
-// 		res.status(500).json({
-// 			success: false,
-// 			message: "An error occurred while creating the test.",
-// 			error: error.message,
-// 		});
-// 	}
-// };
-
 exports.createTest = async (req, res) => {
 	try {
 		const { error, value } = testCreateSchema.validate(req.body);
@@ -109,12 +60,13 @@ exports.createTest = async (req, res) => {
 			return res.json({ success: false, error: error.message });
 		}
 
-		const { testName, duration, courseId } = value;
+		const { testName, duration, courseId, language } = value;
 
 		const newTest = await testModel.create({
 			testName,
 			duration,
 			courseId,
+			language,
 		});
 
 		res.status(200).json({
@@ -126,6 +78,46 @@ exports.createTest = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "An error occurred while creating the test.",
+			error: error.message,
+		});
+	}
+};
+
+exports.updateTestByTestId = async (req, res) => {
+	try {
+		const { testId } = req.params;
+		const test = await testModel.findByPk(testId);
+
+		if (!test) {
+			return res.status(404).json({
+				success: false,
+				message: "Test not found!",
+			});
+		}
+
+		const { error } = testUpdateValidator.validate(req.body, {
+			allowUnknown: true,
+			abortEarly: false,
+		});
+
+		if (error) {
+			return res.status(400).json({
+				success: false,
+				message: "Validation error",
+				errors: error.details.map((err) => err.message),
+			});
+		}
+
+		await test.update(req.body);
+
+		res.status(200).json({
+			success: true,
+			message: "Test Updated successfully",
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while updating the test",
 			error: error.message,
 		});
 	}
@@ -394,4 +386,31 @@ exports.getQuestionsBySectionTitle = async (req, res) => {
 			questions: section.questions,
 		});
 	} catch (error) {}
+};
+
+// Extra:
+exports.getTestInstructionsByTestId = async (req, res) => {
+	try {
+		const { testId } = req.params;
+
+		const test = await testModel.findByPk(testId);
+
+		if (!test) {
+			return res.status(404).json({
+				success: false,
+				message: "Test not found",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			data: test.instruction, // Assuming the instruction field contains the test instructions.
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "Something went wrong while fetching test instructions",
+			error: error.message,
+		});
+	}
 };

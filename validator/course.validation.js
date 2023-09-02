@@ -34,4 +34,5 @@ exports.testCreateSchema = Joi.object({
 	testName: Joi.string().required(),
 	duration: Joi.number().positive().required(),
 	courseId: Joi.number().positive().required(),
+	language: Joi.string().required(),
 });

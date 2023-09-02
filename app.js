@@ -49,15 +49,6 @@ app.use("/user", userRoutes);
 app.use("/test", testRoutes);
 app.use("/students", studentRoutes);
 
-app.get("/test", function (req, res) {
-	var locals = {
-		title: "Page Title",
-		description: "Page Description",
-		header: "Page Header",
-	};
-	res.render("test", locals);
-});
-
 app.get("/playvideo/:name", function (req, res) {
 	const range = req.headers.range;
 	if (!range) {
