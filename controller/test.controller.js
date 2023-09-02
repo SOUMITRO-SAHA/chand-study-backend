@@ -7,9 +7,9 @@ const courseModel = require("../models/course.model");
 const {
 	sectionCrateValidator,
 	questionCreateValidator,
-	testCreateSchema,
+	sectionCreateValidator,
 } = require("../validator/course.validation");
-const { testUpdateValidator } = require("../validator/test.validation");
+const { testValidator } = require("../validator/test.validation");
 
 // Test Controllers:
 // Todo: Pending
@@ -54,19 +54,28 @@ exports.getAllTestsByUserId = async (req, res) => {
 
 exports.createTest = async (req, res) => {
 	try {
-		const { error, value } = testCreateSchema.validate(req.body);
+		const { error, value } = testValidator.validate(req.body);
 
 		if (error) {
 			return res.json({ success: false, error: error.message });
 		}
 
-		const { testName, duration, courseId, language } = value;
+		const {
+			testName,
+			duration,
+			courseId,
+			language,
+			totalMarks,
+			totalQuestions,
+		} = value;
 
 		const newTest = await testModel.create({
 			testName,
 			duration,
 			courseId,
 			language,
+			totalMarks,
+			totalQuestions,
 		});
 
 		res.status(200).json({
@@ -95,7 +104,7 @@ exports.updateTestByTestId = async (req, res) => {
 			});
 		}
 
-		const { error } = testUpdateValidator.validate(req.body, {
+		const { error } = testValidator.validate(req.body, {
 			allowUnknown: true,
 			abortEarly: false,
 		});
@@ -193,7 +202,7 @@ exports.getTestByTestId = async (req, res) => {
 // Section Controllers:
 exports.createSection = async (req, res) => {
 	try {
-		const { error } = sectionCrateValidator.validate(req.body);
+		const { error, value } = sectionCreateValidator.validate(req.body);
 
 		if (error) {
 			res.json({ success: false, error: error.message });
@@ -207,7 +216,9 @@ exports.createSection = async (req, res) => {
 			canSkip,
 			minQuestionsToAdvance,
 			testId,
-		} = req.body;
+			totalQuestions,
+			marksPerQuestion,
+		} = value;
 
 		const newSection = await sectionModel.create({
 			title,
@@ -216,24 +227,26 @@ exports.createSection = async (req, res) => {
 			canSkip,
 			minQuestionsToAdvance,
 			testId,
+			totalQuestions,
+			marksPerQuestion,
 		});
 
 		if (!newSection) {
 			return res.json({
 				success: false,
-				message: "Failed to create new section, database error",
+				message: "Failed to create a new section, database error",
 			});
 		}
 
 		res.status(200).json({
-			success: false,
+			success: true, // Change to true
 			message: "Successfully created a new Section",
 			section: newSection,
 		});
 	} catch (error) {
 		res.status(500).json({
 			success: false,
-			message: "Something went wrong, while creating a new section",
+			message: "Something went wrong while creating a new section",
 			error: error.message,
 		});
 	}
@@ -279,31 +292,22 @@ exports.getSectionsByCourseTest = async (req, res) => {
 // Questions Controllers:
 exports.createQuestion = async (req, res) => {
 	try {
-		const { error } = questionCreateValidator.validate(req.body);
+		const { error, value } = questionCreateValidator.validate(req.body);
 
 		if (error) {
-			return res.json({ success: false, error: error.message });
+			return res.status(400).json({ success: false, error: error.message });
 		}
 
-		const {
-			content,
-			options,
-			correctAnswer,
-			marks,
-			negativeMarking,
-			sectionId,
-		} = req.body;
+		const { content, options, correctAnswer, sectionId } = value;
 
 		const newQuestion = await questionModel.create({
 			content,
 			options,
 			correctAnswer,
-			marks,
-			negativeMarking,
 			sectionId,
 		});
 
-		res.status(201).json({
+		res.status(200).json({
 			success: true,
 			message: "Question created successfully",
 			question: newQuestion,
@@ -404,7 +408,11 @@ exports.getTestInstructionsByTestId = async (req, res) => {
 
 		res.status(200).json({
 			success: true,
-			data: test.instruction, // Assuming the instruction field contains the test instructions.
+			data: {
+				questions: test.totalQuestions,
+				marks: test.totalMarks,
+				instruction: test.instruction,
+			},
 		});
 	} catch (error) {
 		res.status(500).json({

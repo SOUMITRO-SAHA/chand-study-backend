@@ -13,14 +13,6 @@ const Question = sequelize.define("questions", {
 		type: DataTypes.STRING,
 		allowNull: false,
 	},
-	marks: {
-		type: DataTypes.FLOAT,
-		allowNull: false,
-	},
-	negativeMarking: {
-		type: DataTypes.FLOAT,
-		allowNull: false,
-	},
 });
 
 module.exports = Question;

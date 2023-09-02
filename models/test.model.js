@@ -27,6 +27,14 @@ const Test = sequelize.define("tests", {
 		type: DataTypes.TEXT,
 		allowNull: true,
 	},
+	totalMarks: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
+	totalQuestions: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
 });
 
 // Relationship between Test and Section
