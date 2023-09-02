@@ -33,6 +33,5 @@ exports.questionCreateValidator = Joi.object({
 exports.testCreateSchema = Joi.object({
 	testName: Joi.string().required(),
 	duration: Joi.number().positive().required(),
-	sections: Joi.array().items(this.sectionCrateValidator).min(1).required(),
 	courseId: Joi.number().positive().required(),
 });
