@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const testController = require("../controller/test.controller");
+const resultController = require("../controller/result.controller");
+
 const {
 	isLoggedIn,
 	authoriseAdmin,
@@ -40,11 +42,13 @@ router.get(
 	isLoggedIn,
 	testController.getSectionsByCourseTest
 );
-
 router.get(
 	"/u/instructions/:testId",
 	isLoggedIn,
 	testController.getTestInstructionsByTestId
 );
+
+router.post("/attempt", resultController.create);
+router.patch("/save", resultController.save);
 
 module.exports = router;

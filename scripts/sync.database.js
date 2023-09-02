@@ -5,6 +5,7 @@ const Test = require("../models/test.model");
 const UserCourse = require("../models/userCourse.model");
 const Enroll = require("../models/enroll.model");
 const Category = require("../models/category.model");
+const Result = require("../models/result.model");
 
 sequelize
 	.sync({ alter: true })
