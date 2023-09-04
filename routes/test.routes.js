@@ -50,5 +50,6 @@ router.get(
 
 router.post("/attempt", resultController.create);
 router.patch("/save", resultController.save);
+router.get("/result/:testId/:resultId", resultController.evaluate);
 
 module.exports = router;

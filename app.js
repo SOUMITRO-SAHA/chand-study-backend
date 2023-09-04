@@ -1,23 +1,24 @@
 require("dotenv").config();
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-var fs = require("fs");
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const logger = require("morgan");
+const fs = require("fs");
 const cors = require("cors");
 
-// Routes:
+// Routes Imports:
 const authRoutes = require("./routes/auth.routes");
 const courseRoutes = require("./routes/course.routes");
 const userRoutes = require("./routes/user.routes");
 const testRoutes = require("./routes/test.routes");
 const studentRoutes = require("./routes/student.routes");
 
-var app = express();
+const app = express();
 
 // view engine setup
-app.set("views", path.join(__dirname, "views"));
+app.set("views", path.join(__dirname, "/views"));
 //app.set('view engine', 'jade');
 app.set("view engine", "ejs");
 

@@ -35,6 +35,10 @@ const Test = sequelize.define("tests", {
 		type: DataTypes.INTEGER,
 		allowNull: true,
 	},
+	answers: {
+		type: DataTypes.JSON,
+		allowNull: true,
+	},
 });
 
 // Relationship between Test and Section
