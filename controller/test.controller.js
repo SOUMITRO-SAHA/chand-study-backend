@@ -140,6 +140,7 @@ exports.getAllTestsByCourseId = async (req, res) => {
 				courseId,
 			},
 		});
+
 		if (!test) {
 			return res.json({
 				success: false,

@@ -9,11 +9,16 @@ const Result = sequelize.define("Result", {
 		primaryKey: true,
 		autoIncrement: true,
 	},
-
 	// Store the user's answers as JSON
 	answers: {
 		type: DataTypes.JSON,
 		allowNull: false,
+	},
+
+	marks: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		defaultValue: 0,
 	},
 
 	userId: {
