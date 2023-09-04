@@ -290,6 +290,41 @@ exports.getSectionsByCourseTest = async (req, res) => {
 	}
 };
 
+exports.addExistingQuestionToCurrentSection = async (req, res) => {
+	try {
+		const { questionId, sectionId } = req.body;
+
+		// Check if the question with the given questionId exists
+		const question = await questionModel.findByPk(questionId);
+
+		if (!question) {
+			return res.status(404).json({
+				success: false,
+				message: "Question not found",
+			});
+		}
+
+		const newQuestion = await questionModel.create({
+			content: question.content,
+			options: question.options,
+			correctAnswer: question.correctAnswer,
+			sectionId: sectionId,
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Question added to the section successfully.",
+			newQuestion,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while adding the question to the section.",
+			error: error.message,
+		});
+	}
+};
+
 // Questions Controllers:
 exports.createQuestion = async (req, res) => {
 	try {
