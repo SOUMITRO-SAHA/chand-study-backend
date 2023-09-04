@@ -23,6 +23,22 @@ const Test = sequelize.define("tests", {
 		allowNull: false,
 		defaultValue: Languages.HINDI,
 	},
+	instruction: {
+		type: DataTypes.TEXT,
+		allowNull: true,
+	},
+	totalMarks: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
+	totalQuestions: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
+	answers: {
+		type: DataTypes.JSON,
+		allowNull: true,
+	},
 });
 
 // Relationship between Test and Section

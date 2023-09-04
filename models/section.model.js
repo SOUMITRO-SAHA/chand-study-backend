@@ -8,8 +8,13 @@ const Section = sequelize.define("sections", {
 		type: DataTypes.STRING,
 		allowNull: false,
 	},
-	marks: {
-		type: DataTypes.FLOAT,
+	totalQuestions: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		defaultValue: 0,
+	},
+	marksPerQuestion: {
+		type: DataTypes.INTEGER,
 		allowNull: false,
 	},
 	negativeMarking: {

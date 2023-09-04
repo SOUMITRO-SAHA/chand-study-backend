@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const testController = require("../controller/test.controller");
+const resultController = require("../controller/result.controller");
+
 const {
 	isLoggedIn,
 	authoriseAdmin,
@@ -8,6 +10,11 @@ const {
 
 // Admin Access:
 router.post("/admin/new/add", authoriseAdmin, testController.createTest);
+router.post(
+	"/admin/update/:testId",
+	authoriseAdmin,
+	testController.updateTestByTestId
+);
 router.post("/new/section", authoriseAdmin, testController.createSection);
 router.post("/new/question", authoriseAdmin, testController.createQuestion);
 router.get(
@@ -35,5 +42,14 @@ router.get(
 	isLoggedIn,
 	testController.getSectionsByCourseTest
 );
+router.get(
+	"/u/instructions/:testId",
+	isLoggedIn,
+	testController.getTestInstructionsByTestId
+);
+
+router.post("/attempt", resultController.create);
+router.patch("/save", resultController.save);
+router.get("/result/:testId/:resultId", resultController.evaluate);
 
 module.exports = router;

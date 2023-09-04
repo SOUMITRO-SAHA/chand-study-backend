@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.config");
-const userModel = require("./user.model"); // Replace with your user model
-const testModel = require("./test.model"); // Replace with your test model
+const userModel = require("./user.model");
+const testModel = require("./test.model");
 
 const Result = sequelize.define("Result", {
 	id: {
@@ -9,14 +9,18 @@ const Result = sequelize.define("Result", {
 		primaryKey: true,
 		autoIncrement: true,
 	},
-
 	// Store the user's answers as JSON
 	answers: {
 		type: DataTypes.JSON,
 		allowNull: false,
 	},
 
-	// Define a foreign key relationship with userModel
+	marks: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		defaultValue: 0,
+	},
+
 	userId: {
 		type: DataTypes.INTEGER,
 		allowNull: false,
@@ -26,7 +30,6 @@ const Result = sequelize.define("Result", {
 		},
 	},
 
-	// Define a foreign key relationship with testModel
 	testId: {
 		type: DataTypes.INTEGER,
 		allowNull: false,
