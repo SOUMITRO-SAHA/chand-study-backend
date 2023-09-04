@@ -32,6 +32,11 @@ router.delete(
 	authoriseAdmin,
 	testController.deleteQuestionByQuestionId
 );
+router.post(
+	"/q/add",
+	authoriseAdmin,
+	testController.addExistingQuestionToCurrentSection
+);
 
 // Login Access:
 router.get("/all/:courseId", isLoggedIn, testController.getAllTestsByCourseId);
@@ -48,6 +53,7 @@ router.get(
 	testController.getTestInstructionsByTestId
 );
 
+// Result + Exam
 router.post("/attempt", resultController.create);
 router.patch("/save", resultController.save);
 router.get("/result/:testId/:resultId", resultController.evaluate);
