@@ -79,3 +79,44 @@ exports.getAllBlockedStudents = async (req, res) => {
 		});
 	}
 };
+
+exports.getAllStudentsByStudentName = async (req, res) => {
+	try {
+		const { name } = req.body;
+		console.log(name);
+
+		if (!name) {
+			return res.status(400).json({
+				success: false,
+				message: "Student name parameter is required.",
+			});
+		}
+
+		const students = await userModel.findAll({
+			where: {
+				userName: {
+					[Sequelize.Op.like]: `%${name}%`,
+				},
+			},
+		});
+
+		if (!students) {
+			return res.status(404).json({
+				success: false,
+				message: "No students found with the provided name.",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully retrieved students by name",
+			students,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while fetching students by name",
+			error: error.message,
+		});
+	}
+};

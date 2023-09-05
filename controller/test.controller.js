@@ -5,11 +5,11 @@ const userModel = require("../models/user.model");
 const courseModel = require("../models/course.model");
 
 const {
-	sectionCrateValidator,
-	questionCreateValidator,
+	testValidator,
 	sectionCreateValidator,
-} = require("../validator/course.validation");
-const { testValidator } = require("../validator/test.validation");
+	questionCreateValidator,
+	sectionUpdateValidator,
+} = require("../validator/test.validation");
 
 // Test Controllers:
 // Todo: Pending
@@ -135,24 +135,25 @@ exports.updateTestByTestId = async (req, res) => {
 exports.getAllTestsByCourseId = async (req, res) => {
 	try {
 		const { courseId } = req.params;
-		const test = await testModel.findAll({
+
+		const tests = await testModel.findAll({
 			where: {
-				courseId,
+				courseId: parseInt(courseId),
 			},
 		});
 
-		if (!test) {
+		if (!tests) {
 			return res.json({
 				success: false,
 				message:
-					"Something went wrong, while fetching the test of this course.",
+					"Something went wrong, while fetching the tests of this course.",
 			});
 		}
 
 		res.status(200).json({
 			success: true,
 			message: "Successfully fetch all the tests",
-			test,
+			tests,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -248,6 +249,75 @@ exports.createSection = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "Something went wrong while creating a new section",
+			error: error.message,
+		});
+	}
+};
+
+exports.updateSectionById = async (req, res) => {
+	try {
+		const { sectionId } = req.params;
+		const { error, value } = sectionUpdateValidator.validate(req.body);
+
+		if (error) {
+			return res.status(400).json({
+				success: false,
+				message: "Validation error",
+				error: error.details[0].message,
+			});
+		}
+
+		const [updatedCount] = await sectionModel.update(value, {
+			where: {
+				id: parseInt(sectionId),
+			},
+		});
+
+		if (updatedCount === 0) {
+			return res.status(404).json({
+				success: false,
+				message: "Section not found, couldn't update.",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully updated section",
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while updating the section",
+			error: error.message,
+		});
+	}
+};
+
+exports.deleteSectionById = async (req, res) => {
+	try {
+		const { sectionId } = req.params;
+
+		const deletedCount = await sectionModel.destroy({
+			where: {
+				id: parseInt(sectionId),
+			},
+		});
+
+		if (deletedCount === 0) {
+			return res.status(404).json({
+				success: false,
+				message: "Section not found, couldn't delete.",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully deleted section",
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while deleting the section",
 			error: error.message,
 		});
 	}
@@ -426,6 +496,34 @@ exports.getQuestionsBySectionTitle = async (req, res) => {
 			questions: section.questions,
 		});
 	} catch (error) {}
+};
+
+exports.getQuestionsBySectionId = async (req, res) => {
+	try {
+		let { sectionId } = req.params;
+
+		const questions = await sectionModel.findByPk(sectionId, {
+			include: questionModel,
+		});
+
+		if (!questions) {
+			return res.status(400).json({
+				success: false,
+				message: "Question not found",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully fetched all the question fetched",
+			questions: questions.questions,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			error: error.message,
+		});
+	}
 };
 
 // Extra:
