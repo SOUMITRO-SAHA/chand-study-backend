@@ -53,7 +53,13 @@ exports.getUserById = async (req, res) => {
 // Get User By PhoneNumber Number:
 exports.getUserByPhoneNumber = async (req, res) => {
 	try {
-		const { phoneNumber } = req.params;
+		let { phoneNumber } = req.params;
+
+		// Condition for country code:
+		if (phoneNumber.charAt(0) !== "+") {
+			phoneNumber = "+91" + phoneNumber;
+		}
+
 		const user = await userModel.findOne({
 			where: {
 				phoneNumber: phoneNumber,
