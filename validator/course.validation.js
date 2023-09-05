@@ -10,7 +10,20 @@ exports.courseCreateValidator = Joi.object({
 	language: Joi.string()
 		.valid(...Object.values(Languages))
 		.default(Languages.HINDI),
+	defaultValidityDuration: Joi.number().integer().required(),
 });
+
+exports.courseUpdateValidator = Joi.object({
+	courseName: Joi.string().min(3).max(255),
+	courseDescription: Joi.string().max(1000),
+	price: Joi.number().integer().min(0),
+	images: Joi.string(),
+	whatYouGet: Joi.array().items(Joi.string()),
+	youtubeLink: Joi.string(),
+	language: Joi.string().valid("HINDI", "ENGLISH"),
+	isFeatured: Joi.boolean(),
+	defaultValidityDuration: Joi.number().integer().min(1),
+}).min(1);
 
 exports.sectionCreateValidator = Joi.object({
 	testId: Joi.number().positive().required(),

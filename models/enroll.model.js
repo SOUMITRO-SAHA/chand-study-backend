@@ -10,6 +10,10 @@ const Enroll = sequelize.define("enrollments", {
 		primaryKey: true,
 		autoIncrement: true,
 	},
+	validity: {
+		type: DataTypes.DATE,
+		allowNull: true,
+	},
 });
 
 // Define the association

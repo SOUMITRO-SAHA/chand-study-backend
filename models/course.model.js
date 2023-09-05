@@ -50,6 +50,10 @@ const Course = sequelize.define("courses", {
 		allowNull: false,
 		defaultValue: false,
 	},
+	defaultValidityDuration: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+	},
 });
 
 // Define foreign key relationship

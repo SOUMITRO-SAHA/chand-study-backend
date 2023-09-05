@@ -1,6 +1,5 @@
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const userModel = require("../models/user.model");
-const courseModel = require("../models/course.model");
 const enrollmentModel = require("../models/enroll.model");
 
 exports.getAllStudentsEnrolled = async (req, res) => {
@@ -34,12 +33,12 @@ exports.getStudentsByCourseId = async (req, res) => {
 		const enrollments = await enrollmentModel.findAll({
 			where: {
 				courseId: parseInt(courseId),
+				userId: {
+					[Sequelize.Op.not]: null,
+				},
 			},
 			attributes: ["UserId"],
-			group: ["UserId"],
-			where: {
-				UserId: { [Op.not]: null },
-			},
+			raw: true,
 		});
 
 		// const students = enrollments.map((enrollment) => enrollment.User);
