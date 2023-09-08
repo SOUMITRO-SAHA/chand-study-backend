@@ -10,3 +10,7 @@ Learning Materials
 - Profile get user by User ID (Auth error)
 - Section Update, Section Delete API ✅
 - Search By Name (Get Students by Name) ✅
+
+- Students => 
+  - Get All Students => Need full details of the students
+  - Get All the Students Enrolled in a Single Course => Same

@@ -1,6 +1,7 @@
 const { Op, Sequelize } = require("sequelize");
 const userModel = require("../models/user.model");
 const enrollmentModel = require("../models/enroll.model");
+const User = require("../models/user.model");
 
 exports.getAllStudentsEnrolled = async (req, res) => {
 	try {
@@ -12,10 +13,32 @@ exports.getAllStudentsEnrolled = async (req, res) => {
 			},
 		});
 
+		const studentDetailsPromise = students.map(async ({ dataValues }) => {
+			const sid = dataValues.UserId;
+
+			try {
+				const studentDetails = await userModel.findOne({
+					where: { id: sid },
+					attributes: ["id", "userName", "email", "phoneNumber"],
+				});
+
+				return studentDetails;
+			} catch (error) {
+				// Handle any potential errors here
+				console.error(
+					`Error fetching details for student with ID ${sid}:`,
+					error
+				);
+				return null;
+			}
+		});
+
+		const studentInformation = await Promise.all(studentDetailsPromise);
+
 		res.status(200).json({
 			success: true,
 			message: "Successfully fetched the list of all enrolled students",
-			students,
+			students: studentInformation,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -41,13 +64,31 @@ exports.getStudentsByCourseId = async (req, res) => {
 			raw: true,
 		});
 
-		// const students = enrollments.map((enrollment) => enrollment.User);
+		const studentDetailsPromise = enrollments.map(async ({ UserId }) => {
+			try {
+				const studentDetails = await userModel.findOne({
+					where: { id: UserId },
+					attributes: ["id", "userName", "email", "phoneNumber"],
+				});
+
+				return studentDetails;
+			} catch (error) {
+				// Handle any potential errors here
+				console.error(
+					`Error fetching details for student with ID ${sid}:`,
+					error
+				);
+				return null;
+			}
+		});
+
+		const studentInformation = await Promise.all(studentDetailsPromise);
 
 		res.status(200).json({
 			success: true,
 			message:
 				"Successfully fetched the list of students for the specified course",
-			enrollments,
+			students: studentInformation,
 		});
 	} catch (error) {
 		res.status(500).json({

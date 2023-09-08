@@ -3,8 +3,7 @@ const sequelize = require("../config/db.config");
 const User = require("./user.model");
 const Course = require("./course.model");
 
-// This is many-to-many relationships: Basically a user can have multiple courses and a course can have multiple users.
-const Enroll = sequelize.define("enrollments", {
+const Enrollment = sequelize.define("enrollments", {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,
@@ -14,10 +13,22 @@ const Enroll = sequelize.define("enrollments", {
 		type: DataTypes.DATE,
 		allowNull: true,
 	},
+	userId: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		references: {
+			model: User,
+			key: "id",
+		},
+	},
+	courseId: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		references: {
+			model: Course,
+			key: "id",
+		},
+	},
 });
 
-// Define the association
-User.belongsToMany(Course, { through: Enroll });
-Course.belongsToMany(User, { through: Enroll });
-
-module.exports = Enroll;
+module.exports = Enrollment;

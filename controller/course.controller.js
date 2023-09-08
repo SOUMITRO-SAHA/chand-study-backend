@@ -45,8 +45,7 @@ exports.create = (req, res) => {
 		};
 
 		// Validate the course object
-		const { error, value: validateCourseObject } =
-			courseCreateValidator.validate(courseObj);
+		const { error, value } = courseCreateValidator.validate(courseObj);
 
 		if (error) {
 			return res.status(400).json({
@@ -55,9 +54,10 @@ exports.create = (req, res) => {
 				error: error.details[0].message,
 			});
 		}
+		console.log(files);
 
 		if (!files.images) {
-			return res.json({
+			return res.status(400).json({
 				success: false,
 				message: "No photo is selected",
 			});
@@ -133,6 +133,7 @@ exports.updateCourseById = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: "Course updated successfully",
+			updateCourse,
 		});
 	} catch (error) {
 		res.status(500).json({

@@ -23,4 +23,4 @@ exports.courseUpdateValidator = Joi.object({
 	language: Joi.string().valid("HINDI", "ENGLISH"),
 	isFeatured: Joi.boolean(),
 	defaultValidityDuration: Joi.number().integer().min(1),
-}).min(1);
+});
