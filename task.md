@@ -12,5 +12,6 @@ Learning Materials
 - Search By Name (Get Students by Name) ✅
 
 - Students => 
-  - Get All Students => Need full details of the students
-  - Get All the Students Enrolled in a Single Course => Same
+  - Get All Students => Need full details of the students ✅
+  - Get All the Students Enrolled in a Single ✅ 
+  - Course => Same ✅

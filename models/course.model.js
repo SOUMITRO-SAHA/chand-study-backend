@@ -4,6 +4,7 @@ const sequelize = require("../config/db.config");
 const Test = require("./test.model");
 const { Languages } = require("../utils/Languages");
 const Category = require("./category.model");
+const Lecture = require("./lecture.model");
 
 const Course = sequelize.define("courses", {
 	id: {
@@ -57,6 +58,7 @@ const Course = sequelize.define("courses", {
 });
 
 // Define foreign key relationship
+Course.hasMany(Lecture, { foreignKey: "courseId", onDelete: "CASCADE" });
 Course.hasMany(Test, { foreignKey: "courseId", onDelete: "CASCADE" });
 Course.belongsTo(Category, {
 	foreignKey: "categoryId",

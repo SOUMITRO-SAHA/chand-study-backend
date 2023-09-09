@@ -19,7 +19,7 @@ exports.getAllStudentsEnrolled = async (req, res) => {
 			try {
 				const studentDetails = await userModel.findOne({
 					where: { id: sid },
-					attributes: ["id", "userName", "email", "phoneNumber"],
+					attributes: ["id", "userName", "email", "phoneNumber", "createdAt"],
 				});
 
 				return studentDetails;
@@ -68,7 +68,7 @@ exports.getStudentsByCourseId = async (req, res) => {
 			try {
 				const studentDetails = await userModel.findOne({
 					where: { id: UserId },
-					attributes: ["id", "userName", "email", "phoneNumber"],
+					attributes: ["id", "userName", "email", "phoneNumber", "createdAt"],
 				});
 
 				return studentDetails;

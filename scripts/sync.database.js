@@ -6,6 +6,7 @@ const UserCourse = require("../models/userCourse.model");
 const Enrollment = require("../models/enroll.model");
 const Category = require("../models/category.model");
 const Result = require("../models/result.model");
+const Lecture = require("../models/lecture.model");
 
 sequelize
 	.sync({ alter: true })
