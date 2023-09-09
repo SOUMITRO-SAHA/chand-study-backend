@@ -1,7 +1,7 @@
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const userModel = require("../models/user.model");
-const courseModel = require("../models/course.model");
 const enrollmentModel = require("../models/enroll.model");
+const User = require("../models/user.model");
 
 exports.getAllStudentsEnrolled = async (req, res) => {
 	try {
@@ -13,10 +13,32 @@ exports.getAllStudentsEnrolled = async (req, res) => {
 			},
 		});
 
+		const studentDetailsPromise = students.map(async ({ dataValues }) => {
+			const sid = dataValues.UserId;
+
+			try {
+				const studentDetails = await userModel.findOne({
+					where: { id: sid },
+					attributes: ["id", "userName", "email", "phoneNumber", "createdAt"],
+				});
+
+				return studentDetails;
+			} catch (error) {
+				// Handle any potential errors here
+				console.error(
+					`Error fetching details for student with ID ${sid}:`,
+					error
+				);
+				return null;
+			}
+		});
+
+		const studentInformation = await Promise.all(studentDetailsPromise);
+
 		res.status(200).json({
 			success: true,
 			message: "Successfully fetched the list of all enrolled students",
-			students,
+			students: studentInformation,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -34,21 +56,39 @@ exports.getStudentsByCourseId = async (req, res) => {
 		const enrollments = await enrollmentModel.findAll({
 			where: {
 				courseId: parseInt(courseId),
+				userId: {
+					[Sequelize.Op.not]: null,
+				},
 			},
 			attributes: ["UserId"],
-			group: ["UserId"],
-			where: {
-				UserId: { [Op.not]: null },
-			},
+			raw: true,
 		});
 
-		// const students = enrollments.map((enrollment) => enrollment.User);
+		const studentDetailsPromise = enrollments.map(async ({ UserId }) => {
+			try {
+				const studentDetails = await userModel.findOne({
+					where: { id: UserId },
+					attributes: ["id", "userName", "email", "phoneNumber", "createdAt"],
+				});
+
+				return studentDetails;
+			} catch (error) {
+				// Handle any potential errors here
+				console.error(
+					`Error fetching details for student with ID ${sid}:`,
+					error
+				);
+				return null;
+			}
+		});
+
+		const studentInformation = await Promise.all(studentDetailsPromise);
 
 		res.status(200).json({
 			success: true,
 			message:
 				"Successfully fetched the list of students for the specified course",
-			enrollments,
+			students: studentInformation,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -76,6 +116,47 @@ exports.getAllBlockedStudents = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "Something went wrong, while fetching the blocked students",
+			error: error.message,
+		});
+	}
+};
+
+exports.getAllStudentsByStudentName = async (req, res) => {
+	try {
+		const { name } = req.body;
+		console.log(name);
+
+		if (!name) {
+			return res.status(400).json({
+				success: false,
+				message: "Student name parameter is required.",
+			});
+		}
+
+		const students = await userModel.findAll({
+			where: {
+				userName: {
+					[Sequelize.Op.like]: `%${name}%`,
+				},
+			},
+		});
+
+		if (!students) {
+			return res.status(404).json({
+				success: false,
+				message: "No students found with the provided name.",
+			});
+		}
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully retrieved students by name",
+			students,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: "An error occurred while fetching students by name",
 			error: error.message,
 		});
 	}

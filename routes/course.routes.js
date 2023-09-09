@@ -16,6 +16,7 @@ router.delete(
 	authoriseAdmin,
 	courseController.deleteCourseById
 );
+
 // Category Controller
 router.post("/cat/add", authoriseAdmin, categoryController.createNewCategory);
 router.patch(
@@ -30,6 +31,7 @@ router.get("/all", courseController.getAllCourses);
 router.get("/:courseId", courseController.getCouresByCourseId);
 router.get("/tests/:courseId", courseController.getAllTestsByCourseId);
 
+router.get("/c/all", categoryController.getAllCategory);
 router.get("/c/popular", courseController.getPopularCourses);
 router.get("/c/free", courseController.getFreeCourses);
 router.get("/c/new", courseController.getRecentlyAddedCourses);

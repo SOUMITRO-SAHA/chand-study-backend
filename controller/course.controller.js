@@ -1,7 +1,10 @@
 const courseModel = require("../models/course.model");
 const testModel = require("../models/test.model");
 const enrollmentModel = require("../models/enroll.model");
-const { courseCreateValidator } = require("../validator/course.validation");
+const {
+	courseCreateValidator,
+	courseUpdateValidator,
+} = require("../validator/course.validation");
 const formidable = require("formidable");
 const fs = require("fs");
 const path = require("path");
@@ -27,6 +30,7 @@ exports.create = (req, res) => {
 			whatYouGet,
 			youtubeLink,
 			language,
+			courseValidity,
 		} = fields;
 
 		// Create the course object
@@ -37,11 +41,11 @@ exports.create = (req, res) => {
 			whatYouGet: whatYouGet[0].split(","),
 			youtubeLink: youtubeLink[0],
 			language: language[0],
+			defaultValidityDuration: parseInt(courseValidity[0]),
 		};
 
 		// Validate the course object
-		const { error, value: validateCourseObject } =
-			courseCreateValidator.validate(courseObj);
+		const { error, value } = courseCreateValidator.validate(courseObj);
 
 		if (error) {
 			return res.status(400).json({
@@ -50,9 +54,10 @@ exports.create = (req, res) => {
 				error: error.details[0].message,
 			});
 		}
+		console.log(files);
 
 		if (!files.images) {
-			return res.json({
+			return res.status(400).json({
 				success: false,
 				message: "No photo is selected",
 			});
@@ -101,10 +106,17 @@ exports.create = (req, res) => {
 
 exports.updateCourseById = async (req, res) => {
 	const { courseId } = req.params;
-	const updates = req.body;
-	console.log("Hello", courseId, updates);
-
 	try {
+		const { error, value: updates } = courseUpdateValidator.validate(req.body);
+
+		if (error) {
+			return res.status(400).json({
+				success: false,
+				message: "Validation error",
+				error: error.details[0].message,
+			});
+		}
+
 		const updateCourse = await courseModel.update(updates, {
 			where: {
 				id: parseInt(courseId),
@@ -121,6 +133,7 @@ exports.updateCourseById = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: "Course updated successfully",
+			updateCourse,
 		});
 	} catch (error) {
 		res.status(500).json({

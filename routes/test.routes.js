@@ -22,16 +22,24 @@ router.get(
 	authoriseAdmin,
 	testController.getQuestionsBySectionTitle
 );
-router.patch(
-	"/q/:questionId",
-	authoriseAdmin,
-	testController.updateQuestionsByQuestionId
+router.get(
+	"/q/s/:sectionId",
+	isLoggedIn,
+	testController.getQuestionsBySectionId
 );
-router.delete(
-	"/q/:questionId",
-	authoriseAdmin,
-	testController.deleteQuestionByQuestionId
-);
+
+router
+	.patch(
+		"/q/:questionId",
+		authoriseAdmin,
+		testController.updateQuestionsByQuestionId
+	)
+	.delete(
+		"/q/:questionId",
+		authoriseAdmin,
+		testController.deleteQuestionByQuestionId
+	);
+
 router.post(
 	"/q/add",
 	authoriseAdmin,
@@ -39,6 +47,10 @@ router.post(
 );
 
 // Login Access:
+router
+	.patch("/s/update/:sectionId", isLoggedIn, testController.updateSectionById)
+	.delete("/s/update/:sectionId", isLoggedIn, testController.deleteSectionById);
+
 router.get("/all/:courseId", isLoggedIn, testController.getAllTestsByCourseId);
 router.get("/u/:userId", isLoggedIn, testController.getAllTestsByUserId);
 router.get("/:testId", isLoggedIn, testController.getTestByTestId);

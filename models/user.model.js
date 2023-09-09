@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.config");
 const { AuthRoles } = require("../utils/AuthRoles");
+const Course = require("./course.model");
+const Enrollment = require("./enroll.model");
 
 // Create User:
 const User = sequelize.define("users", {
@@ -47,5 +49,8 @@ const User = sequelize.define("users", {
 		defaultValue: false,
 	},
 });
+
+User.belongsToMany(Course, { through: "enrollments", foreignKey: "userId" });
+User.hasMany(Enrollment, { foreignKey: "userId" });
 
 module.exports = User;

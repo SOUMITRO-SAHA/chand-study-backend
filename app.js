@@ -14,6 +14,7 @@ const courseRoutes = require("./routes/course.routes");
 const userRoutes = require("./routes/user.routes");
 const testRoutes = require("./routes/test.routes");
 const studentRoutes = require("./routes/student.routes");
+const lectureRoutes = require("./routes/lecture.routes");
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use("/course", courseRoutes);
 app.use("/user", userRoutes);
 app.use("/test", testRoutes);
 app.use("/students", studentRoutes);
+app.use("/c/lect", lectureRoutes);
 
 app.get("/playvideo/:name", function (req, res) {
 	const range = req.headers.range;

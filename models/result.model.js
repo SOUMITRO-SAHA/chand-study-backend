@@ -3,7 +3,7 @@ const sequelize = require("../config/db.config");
 const userModel = require("./user.model");
 const testModel = require("./test.model");
 
-const Result = sequelize.define("Result", {
+const Result = sequelize.define("results", {
 	id: {
 		type: DataTypes.INTEGER,
 		primaryKey: true,

@@ -1,7 +1,8 @@
 const userModel = require("../models/user.model");
 const courseModel = require("../models/course.model");
 const enrollModel = require("../models/enroll.model");
-const { number } = require("joi");
+const { Sequelize, Op } = require("sequelize");
+const { addMonths } = require("date-fns");
 
 // Get All the Users:
 exports.getAllUsers = async (req, res) => {
@@ -53,7 +54,13 @@ exports.getUserById = async (req, res) => {
 // Get User By PhoneNumber Number:
 exports.getUserByPhoneNumber = async (req, res) => {
 	try {
-		const { phoneNumber } = req.params;
+		let { phoneNumber } = req.params;
+
+		// Condition for country code:
+		if (phoneNumber.charAt(0) !== "+") {
+			phoneNumber = "+91" + phoneNumber;
+		}
+
 		const user = await userModel.findOne({
 			where: {
 				phoneNumber: phoneNumber,
@@ -189,30 +196,66 @@ exports.enrollInCourse = async (req, res) => {
 	let userId = req.user.id;
 
 	try {
-		if (typeof userId !== number) {
+		// Converting to Number:
+		if (typeof userId !== "number") {
 			userId = Number(userId);
 		}
-		if (typeof courseId !== number) {
+		if (typeof courseId !== "number") {
 			courseId = Number(courseId);
 		}
 
-		const isEnrolled = await enrollModel.findOne({
+		const existingEnrollment = await enrollModel.findOne({
 			where: {
 				userId,
 				courseId,
 			},
 		});
 
-		if (isEnrolled) {
+		if (existingEnrollment) {
 			return res.status(400).json({
 				success: false,
 				message: "User is already enrolled in the course",
 			});
 		}
 
+		const course = await courseModel.findByPk(courseId);
+
+		if (!course) {
+			return res.status(404).json({
+				success: false,
+				message: "Course not found",
+			});
+		}
+
+		const defaultValidityDuration = course.defaultValidityDuration;
+
+		if (!defaultValidityDuration) {
+			const enrolledUser = await enrollModel.create({
+				userId,
+				courseId,
+			});
+
+			if (!enrolledUser) {
+				return res.status(500).json({
+					success: false,
+					message: "Unable to enroll the user into the course",
+				});
+			}
+
+			return res.status(200).json({
+				success: true,
+				message: "User enrolled in the course successfully",
+				enrolledUser,
+			});
+		}
+
+		const enrollmentDate = new Date();
+		const validity = addMonths(enrollmentDate, defaultValidityDuration);
+
 		const enrolledUser = await enrollModel.create({
 			userId,
 			courseId,
+			validity,
 		});
 
 		if (!enrolledUser) {
@@ -225,6 +268,7 @@ exports.enrollInCourse = async (req, res) => {
 		res.status(200).json({
 			success: true,
 			message: "User enrolled in the course successfully",
+			enrolledUser,
 		});
 	} catch (error) {
 		res.status(500).json({
