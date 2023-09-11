@@ -10,6 +10,7 @@ const {
 	questionCreateValidator,
 	sectionUpdateValidator,
 } = require("../validator/test.validation");
+const { string } = require("joi");
 
 // Test Controllers:
 // Todo: Pending
@@ -254,6 +255,26 @@ exports.createSection = async (req, res) => {
 	}
 };
 
+exports.getSectionById = async (req, res) => {
+	try {
+		const { sectionId } = req.params;
+		const section = await sectionModel.findByPk(sectionId, {
+			include: questionModel,
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully retrieved section information",
+			section,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			error: error.message,
+		});
+	}
+};
+
 exports.updateSectionById = async (req, res) => {
 	try {
 		const { sectionId } = req.params;
@@ -318,6 +339,29 @@ exports.deleteSectionById = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "An error occurred while deleting the section",
+			error: error.message,
+		});
+	}
+};
+
+exports.getAllSectionByTestId = async (req, res) => {
+	try {
+		let { testId } = req.params;
+		if (typeof testId === string) {
+			testId = parseInt(testId);
+		}
+		const sections = await sectionModel.findAll({
+			where: { testId },
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully retrieved section information",
+			sections,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
 			error: error.message,
 		});
 	}
