@@ -48,8 +48,10 @@ router.post(
 
 // Login Access:
 router
-	.patch("/s/update/:sectionId", isLoggedIn, testController.updateSectionById)
-	.delete("/s/update/:sectionId", isLoggedIn, testController.deleteSectionById);
+	.get("/s/:sectionId", isLoggedIn, testController.getSectionById)
+	.get("/all/s/:testId", isLoggedIn, testController.getAllSectionByTestId)
+	.patch("/s/:sectionId", isLoggedIn, testController.updateSectionById)
+	.delete("/s/:sectionId", isLoggedIn, testController.deleteSectionById);
 
 router.get("/all/:courseId", isLoggedIn, testController.getAllTestsByCourseId);
 router.get("/u/:userId", isLoggedIn, testController.getAllTestsByUserId);
