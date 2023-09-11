@@ -7,6 +7,7 @@ const {
 
 exports.createByCourseId = async (req, res) => {
 	try {
+		const { courseId } = req.params;
 		const { error, value } = lectureCreateValidator.validate(req.body);
 
 		if (error) {
@@ -17,11 +18,11 @@ exports.createByCourseId = async (req, res) => {
 			});
 		}
 
-		const { courseId, lectureName } = value;
+		const { lectureName } = value;
 
 		const existingLecture = await Lecture.findOne({
 			where: {
-				courseId,
+				courseId: parseInt(courseId),
 				lectureName,
 			},
 		});
@@ -33,7 +34,10 @@ exports.createByCourseId = async (req, res) => {
 			});
 		}
 
-		const lecture = await Lecture.create(value);
+		const lecture = await Lecture.create({
+			...value,
+			courseId: parseInt(courseId),
+		});
 
 		res.status(200).json({
 			success: true,

@@ -8,7 +8,6 @@ exports.lectureCreateValidator = Joi.object({
 	language: Joi.string()
 		.valid(...Object.values(Languages))
 		.default(Languages.HINDI),
-	courseId: Joi.number().integer().required(),
 });
 
 exports.lectureUpdateValidator = Joi.object({
