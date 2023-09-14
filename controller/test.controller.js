@@ -169,16 +169,13 @@ exports.getAllTestsByCourseId = async (req, res) => {
 exports.getTestByTestId = async (req, res) => {
   try {
     const { testId } = req.params;
-    const test = await testModel.findByPk(testId, {
-      include: {
-        model: sectionModel,
-        where: {
-          testId,
+    const test = await testModel.findByPk(parseInt(testId), {
+      include: [
+        {
+          model: sectionModel,
+          include: questionModel,
         },
-        include: {
-          model: questionModel,
-        },
-      },
+      ],
     });
 
     if (!test) {
