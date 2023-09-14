@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.config");
-const userModel = require("./user.model");
+const User = require("./user.model");
 const testModel = require("./test.model");
 
 const Result = sequelize.define("results", {
@@ -25,7 +25,7 @@ const Result = sequelize.define("results", {
 		type: DataTypes.INTEGER,
 		allowNull: false,
 		references: {
-			model: userModel,
+			model: User,
 			key: "id",
 		},
 	},
@@ -35,9 +35,11 @@ const Result = sequelize.define("results", {
 		allowNull: false,
 		references: {
 			model: testModel,
-			key: "id",
+			key: User.id,
 		},
 	},
 });
+
+Result.belongsTo(User, { foreignKey: "userId" });
 
 module.exports = Result;

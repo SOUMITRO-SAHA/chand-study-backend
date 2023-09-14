@@ -2,6 +2,7 @@ const resultModel = require("../models/result.model");
 const testModel = require("../models/test.model");
 const sectionModel = require("../models/section.model");
 const questionModel = require("../models/question.model");
+const userModel = require("../models/user.model");
 const sequelize = require("../config/db.config");
 const { Op } = require("sequelize");
 /********************************* 
@@ -207,6 +208,33 @@ exports.evaluate = async (req, res) => {
 		res.status(500).json({
 			success: false,
 			message: "Something went wrong while evaluating the result.",
+			error: error.message,
+		});
+	}
+};
+
+// Result:
+exports.getTestResultsByTestId = async (req, res) => {
+	try {
+		let { testId } = req.params;
+
+		const results = await resultModel.findAll({
+			where: { testId: parseInt(testId) },
+			include: {
+				model: userModel,
+				attributes: ["userName", "email", "phoneNumber"],
+				required: true,
+			},
+		});
+
+		res.status(200).json({
+			success: true,
+			message: "Successfully retrieved all the results",
+			results,
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
 			error: error.message,
 		});
 	}
