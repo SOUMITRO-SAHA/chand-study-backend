@@ -53,7 +53,7 @@ router
   .patch('/s/:sectionId', isLoggedIn, testController.updateSectionById)
   .delete('/s/:sectionId', isLoggedIn, testController.deleteSectionById);
 
-router.get('/all/:courseId', isLoggedIn, testController.getAllTestsByCourseId);
+router.get('/all/:courseId', testController.getAllTestsByCourseId);
 router.get('/u/:userId', isLoggedIn, testController.getAllTestsByUserId);
 router.get('/:testId', isLoggedIn, testController.getTestByTestId);
 router.get(
