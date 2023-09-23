@@ -21,9 +21,23 @@ const libraryRoutes = require('./routes/library.routes');
 const app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, '/views'));
-//app.set('view engine', 'jade');
+app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'jade');
 app.set('view engine', 'ejs');
+
+app.get('/', (req, res) => {
+  res.render('index');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  const status = err.status || 500;
+  res.status(status).render('error', {
+    message: err.message,
+    status: status,
+    stack: err.stack,
+  });
+});
 
 app.use(
   cors({
@@ -45,8 +59,8 @@ app.use(cookieParser());
 
 // Setting the Upload Folder Public:
 app.use(express.static(path.join(__dirname, '/public')));
-app.use(express.static(path.join(__dirname, '/uploads')));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads/courses', express.static(__dirname + '/uploads/courses'));
 
 // Routers
 app.use('/auth', authRoutes);
