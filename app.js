@@ -42,9 +42,11 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Setting the Upload Folder Public:
+app.use(express.static(path.join(__dirname, '/public')));
+app.use(express.static(path.join(__dirname, '/uploads')));
 app.use('/uploads', express.static('uploads'));
-//Configuration for Multer
 
 // Routers
 app.use('/auth', authRoutes);
