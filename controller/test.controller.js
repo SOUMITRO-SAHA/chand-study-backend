@@ -3,6 +3,7 @@ const sectionModel = require('../models/section.model');
 const questionModel = require('../models/question.model');
 const userModel = require('../models/user.model');
 const courseModel = require('../models/course.model');
+const resultModel = require('../models/result.model');
 
 const {
   testValidator,
@@ -11,19 +12,17 @@ const {
   sectionUpdateValidator,
 } = require('../validator/test.validation');
 const { string } = require('joi');
+const sequelize = require('../config/db.config');
 
 // Test Controllers:
-// Todo: Pending
+// FIXME:
 exports.getAllTestsByUserId = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const user = await userModel.findByPk(userId, {
+    const user = await resultModel.findAll({
       where: {
-        include: {
-          module: testModel,
-          include: sectionModel,
-        },
+        userId: parseInt(userId),
       },
     });
 
@@ -34,15 +33,15 @@ exports.getAllTestsByUserId = async (req, res) => {
       });
     }
 
-    const tests = user.courses.reduce((acc, course) => {
-      acc.push(...course.Tests);
-      return acc;
-    }, []);
+    // const tests = user.courses.reduce((acc, course) => {
+    //   acc.push(...course.tests);
+    //   return acc;
+    // }, []);
 
     res.status(200).json({
       success: true,
       message: 'Successfully fetch the test for user',
-      tests,
+      user,
     });
   } catch (error) {
     res.status(500).json({
@@ -644,7 +643,6 @@ exports.getTestInstructionsByTestId = async (req, res) => {
 exports.addQuestionsToSectionBySectionId = async (req, res) => {
   try {
     const { questions, sectionId } = req.body;
-    console.log(sectionId, questions);
 
     // Find the section based on sectionId
     const section = await sectionModel.findByPk(sectionId);

@@ -54,7 +54,6 @@ exports.create = (req, res) => {
         error: error.details[0].message,
       });
     }
-    console.log(files);
 
     if (!files.images) {
       return res.status(400).json({
@@ -104,8 +103,39 @@ exports.create = (req, res) => {
 
 exports.updateCourseById = async (req, res) => {
   const { courseId } = req.params;
-  try {
-    const { error, value: updates } = courseUpdateValidator.validate(req.body);
+  const form = new formidable.IncomingForm();
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error occurred while parsing form data',
+        error: err.message,
+      });
+    }
+
+    const {
+      courseName,
+      courseDescription,
+      price,
+      whatYouGet,
+      youtubeLink,
+      language,
+      courseValidity,
+    } = fields;
+
+    // Create the course object
+    const courseObj = {
+      courseName: courseName[0],
+      courseDescription: courseDescription[0],
+      price: parseInt(price[0]),
+      whatYouGet: whatYouGet[0].split(','),
+      youtubeLink: youtubeLink[0],
+      language: language[0],
+      defaultValidityDuration: parseInt(courseValidity[0]),
+    };
+
+    // Validate the course object
+    const { error, value } = courseUpdateValidator.validate(courseObj);
 
     if (error) {
       return res.status(400).json({
@@ -114,32 +144,55 @@ exports.updateCourseById = async (req, res) => {
         error: error.details[0].message,
       });
     }
-
-    const updateCourse = await courseModel.update(updates, {
-      where: {
-        id: parseInt(courseId),
-      },
-    });
-
-    if (!updateCourse) {
-      return res.status(404).json({
+    if (!files.images) {
+      return res.status(400).json({
         success: false,
-        message: "Couldn't update course, Course Not Found!",
+        message: 'No photo is selected',
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Course updated successfully',
-      updateCourse,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'An error occurred while updating the course',
-      error: error.message,
-    });
-  }
+    try {
+      // Handle image upload
+      const uploadFolderPath = path.join(__dirname, '../uploads/courses');
+      const photo = files.images;
+      const filePath = photo[0].filepath;
+      const data = fs.readFileSync(filePath);
+      const imageExtension = photo[0].mimetype.split('/')[1];
+      const imageName = `${Date.now()}.${imageExtension}`;
+      const imagePath = path.join(uploadFolderPath, imageName);
+      fs.writeFileSync(imagePath, data);
+
+      const updateObject = {
+        ...value,
+        images: imagePath,
+      };
+
+      const updateCourse = await courseModel.update(updateObject, {
+        where: {
+          id: parseInt(courseId),
+        },
+      });
+
+      if (!updateCourse) {
+        return res.status(404).json({
+          success: false,
+          message: "Couldn't update course, Course Not Found!",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Course updated successfully',
+        updateCourse,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while updating the course',
+        error: error.message,
+      });
+    }
+  });
 };
 
 exports.deleteCourseById = async (req, res) => {
