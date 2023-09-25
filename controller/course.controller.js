@@ -124,15 +124,36 @@ exports.updateCourseById = async (req, res) => {
     } = fields;
 
     // Create the course object
-    const courseObj = {
-      courseName: courseName[0],
-      courseDescription: courseDescription[0],
-      price: parseInt(price[0]),
-      whatYouGet: whatYouGet[0].split(','),
-      youtubeLink: youtubeLink[0],
-      language: language[0],
-      defaultValidityDuration: parseInt(courseValidity[0]),
-    };
+    // Create the course object
+    const courseObj = {};
+
+    if (courseName && courseName[0]) {
+      courseObj.courseName = courseName[0];
+    }
+
+    if (courseDescription && courseDescription[0]) {
+      courseObj.courseDescription = courseDescription[0];
+    }
+
+    if (price && price[0]) {
+      courseObj.price = parseInt(price[0]);
+    }
+
+    if (whatYouGet && whatYouGet[0]) {
+      courseObj.whatYouGet = whatYouGet[0].split(',');
+    }
+
+    if (youtubeLink && youtubeLink[0]) {
+      courseObj.youtubeLink = youtubeLink[0];
+    }
+
+    if (language && language[0]) {
+      courseObj.language = language[0];
+    }
+
+    if (courseValidity && courseValidity[0]) {
+      courseObj.defaultValidityDuration = parseInt(courseValidity[0]);
+    }
 
     // Validate the course object
     const { error, value } = courseUpdateValidator.validate(courseObj);
@@ -144,28 +165,29 @@ exports.updateCourseById = async (req, res) => {
         error: error.details[0].message,
       });
     }
-    if (!files.images) {
-      return res.status(400).json({
-        success: false,
-        message: 'No photo is selected',
-      });
-    }
 
     try {
       // Handle image upload
-      const uploadFolderPath = path.join(__dirname, '../uploads/courses');
-      const photo = files.images;
-      const filePath = photo[0].filepath;
-      const data = fs.readFileSync(filePath);
-      const imageExtension = photo[0].mimetype.split('/')[1];
-      const imageName = `${Date.now()}.${imageExtension}`;
-      const imagePath = path.join(uploadFolderPath, imageName);
-      fs.writeFileSync(imagePath, data);
-
+      let imagePath = '';
       const updateObject = {
         ...value,
-        images: imagePath,
       };
+
+      if (files.images) {
+        const uploadFolderPath = path.join(__dirname, '../uploads/courses');
+        const photo = files.images;
+        const filePath = photo[0].filepath;
+        const data = fs.readFileSync(filePath);
+        const imageExtension = photo[0].mimetype.split('/')[1];
+        const imageName = `${Date.now()}.${imageExtension}`;
+        imagePath = path.join(uploadFolderPath, imageName);
+        fs.writeFileSync(imagePath, data);
+
+        // Updating the Update Object
+        updateObject.images = imagePath;
+      }
+
+      console.log(updateObject);
 
       const updateCourse = await courseModel.update(updateObject, {
         where: {
